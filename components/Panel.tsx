@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useLang, setLocale } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
-import { addApplication } from "@/app/panel/actions";
+import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
+import { addApplication, setFollowedUp, setStatus } from "@/app/panel/actions";
 import { signOut } from "@/app/entrar/actions";
 
 export type Application = {
@@ -22,23 +23,19 @@ export type Application = {
   followed_up: boolean;
 };
 
-const daysSince = (isoDate: string) =>
-  Math.max(
-    0,
-    Math.round((Date.now() - new Date(isoDate + "T00:00:00").getTime()) / 86400000),
-  );
-
 const STATUS_TONE: Record<string, string> = {
   aplicado: "bg-brand-soft text-brand",
-  cribado: "bg-brand-soft text-brand",
+  cribado: "bg-brand/20 text-brand",
   entrevista_1: "bg-warn/15 text-warn",
-  entrevista_2: "bg-warn/15 text-warn",
-  entrevista_3: "bg-warn/15 text-warn",
-  oferta: "bg-ok/15 text-ok",
+  entrevista_2: "bg-warn/20 text-warn",
+  entrevista_3: "bg-warn/30 text-warn",
+  oferta: "bg-ok/20 text-ok",
   contratado: "bg-ok text-white",
-  rechazado: "bg-bad/10 text-bad",
-  retirado: "bg-muted/15 text-muted",
+  rechazado: "bg-bad/15 text-bad",
+  retirado: "bg-muted/20 text-muted",
 };
+
+const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted";
 
 export default function Panel({ rows }: { rows: Application[] }) {
   const { t, locale } = useLang();
@@ -48,12 +45,12 @@ export default function Panel({ rows }: { rows: Application[] }) {
   const roles = [...new Set(rows.map((r) => r.role))];
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-5 sm:p-8">
+    <main className="mx-auto w-full max-w-5xl flex-1 p-5 sm:p-8">
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t.appName}</h1>
           <p className="text-sm text-muted">
-            {rows.length} {t.total}
+            {rows.length} {rows.length === 1 ? t.totalOne : t.total}
           </p>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted">
@@ -69,82 +66,154 @@ export default function Panel({ rows }: { rows: Application[] }) {
         </div>
       </header>
 
-      <button
-        onClick={() => setOpen(!open)}
-        className="mt-6 w-full rounded-2xl bg-brand px-5 py-4 text-left font-medium text-white transition hover:opacity-90"
-      >
-        + {t.newApplication}
-      </button>
+      <div className="mt-8 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-medium">{t.yourApplications}</h2>
+        <button
+          onClick={() => setOpen(!open)}
+          className="shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          {open ? t.cancel : `+ ${t.newApplication}`}
+        </button>
+      </div>
 
       {open && (
-        <NewForm
-          t={t}
-          companies={companies}
-          roles={roles}
-          onDone={() => setOpen(false)}
-        />
+        <NewForm t={t} companies={companies} roles={roles} onDone={() => setOpen(false)} />
       )}
 
-      <section className="mt-6 grid gap-3">
-        {rows.length === 0 && !open && (
-          <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-            {t.empty}
-          </p>
-        )}
+      {!open && (
+        <section className="mt-4 grid max-w-3xl gap-3">
+          {rows.length === 0 && (
+            <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
+              {t.empty}
+            </p>
+          )}
 
-        {rows.map((r) => (
-          <article
-            key={r.id}
-            className="rounded-2xl border border-border bg-surface p-4 transition hover:border-brand"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="truncate font-medium">{r.role}</h2>
-                <p className="truncate text-sm text-muted">{r.company}</p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-                  STATUS_TONE[r.status] ?? "bg-muted/15 text-muted"
-                }`}
-              >
-                {t[r.status as keyof Dict] as string}
-              </span>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-              <span>{t.daysAgo(daysSince(r.applied_on))}</span>
-              {r.work_mode && <span>· {t[r.work_mode as keyof Dict] as string}</span>}
-              {r.source && <span>· {r.source}</span>}
-              {(r.salary_min || r.salary_max) && (
-                <span>
-                  · {money(r.salary_min, locale)}
-                  {r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}
-                </span>
-              )}
-              {r.url && (
-                <a
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-brand hover:underline"
-                >
-                  · {t.url}
-                </a>
-              )}
-            </div>
-          </article>
-        ))}
-      </section>
+          {rows.map((r) => (
+            <Card key={r.id} r={r} t={t} locale={locale} />
+          ))}
+        </section>
+      )}
     </main>
   );
 }
 
-const plusDays = (isoDate: string, days: number) => {
-  const d = new Date(isoDate + "T00:00:00");
-  if (Number.isNaN(d.getTime())) return "";
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-};
+function Card({ r, t, locale }: { r: Application; t: Dict; locale: string }) {
+  const [pending, start] = useTransition();
+  const [picking, setPicking] = useState(false);
+  const run = (fn: () => Promise<unknown>) => start(() => void fn());
+
+  // Sin fecha guardada damos por supuestos 15 dias desde que aplicaste.
+  // Negativo = ya deberias haber contactado.
+  const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
+  const overdue = !r.followed_up && daysToFollowUp <= 0;
+
+  return (
+    <article
+      className={`relative rounded-2xl border bg-surface p-4 transition ${
+        overdue ? "border-warn/60" : "border-border hover:border-brand"
+      } ${pending ? "opacity-60" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate font-medium">{r.role}</h2>
+          <p className="truncate text-sm text-muted">{r.company}</p>
+        </div>
+
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setPicking(!picking)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${tone(r.status)}`}
+          >
+            {t[r.status as keyof Dict] as string}
+          </button>
+
+          {picking && (
+            <>
+              {/* Capta el clic fuera para cerrar el globito */}
+              <div className="fixed inset-0 z-10" onClick={() => setPicking(false)} />
+              <div className="absolute right-0 z-20 mt-2 w-60 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                <div className="flex flex-wrap gap-1.5">
+                  {STATUSES.map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => {
+                        setPicking(false);
+                        if (st !== r.status) run(() => setStatus(r.id, st));
+                      }}
+                      className={`rounded-full px-3 py-1.5 text-xs font-medium transition hover:opacity-80 ${tone(st)} ${
+                        st === r.status ? "ring-2 ring-brand ring-offset-2 ring-offset-surface" : ""
+                      }`}
+                    >
+                      {t[st as keyof Dict] as string}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+        <span>{t.daysAgo(daysSince(r.applied_on))}</span>
+        {r.work_mode && <span>· {t[r.work_mode as keyof Dict] as string}</span>}
+        {r.source && <span>· {r.source}</span>}
+        {(r.salary_min || r.salary_max) && (
+          <span>
+            · {money(r.salary_min, locale)}
+            {r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}
+          </span>
+        )}
+        {r.url && (
+          <a
+            href={r.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand hover:underline"
+          >
+            · {t.url}
+          </a>
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted">{t.notContacted}</span>
+          <button
+            type="button"
+            onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+              r.followed_up ? "bg-ok text-white" : "border border-border text-muted"
+            }`}
+          >
+            {r.followed_up ? `✓ ${t.yes}` : t.yes}
+          </button>
+          <button
+            type="button"
+            onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+              !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
+            }`}
+          >
+            {t.notYet}
+          </button>
+        </div>
+
+        {!r.followed_up && (
+          <span className={`text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
+            {daysToFollowUp === 0
+              ? t.followUpToday
+              : daysToFollowUp < 0
+                ? t.followUpDue(-daysToFollowUp)
+                : t.followUpSoon(daysToFollowUp)}
+          </span>
+        )}
+      </div>
+    </article>
+  );
+}
 
 // Un clic en cualquier parte del campo abre el calendario, no solo en el icono.
 const openPicker = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -169,8 +238,10 @@ function NewForm({
   const [error, setError] = useState<string>();
   const [noSalary, setNoSalary] = useState(false);
   const [salary, setSalary] = useState({ min: "", max: "" });
-  const today = new Date().toISOString().slice(0, 10);
-  const [dates, setDates] = useState({ applied: today, follow: plusDays(today, 15) });
+  const [dates, setDates] = useState(() => {
+    const hoy = today();
+    return { applied: hoy, follow: plusDays(hoy, 15) };
+  });
 
   const field =
     "w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none focus:border-brand";
