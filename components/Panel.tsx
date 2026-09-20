@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useLang, setLocale } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
+import { money, toEuros } from "@/lib/money";
 import { addApplication } from "@/app/panel/actions";
 import { signOut } from "@/app/entrar/actions";
 
@@ -34,6 +35,7 @@ const STATUS_TONE: Record<string, string> = {
   entrevista_2: "bg-warn/15 text-warn",
   entrevista_3: "bg-warn/15 text-warn",
   oferta: "bg-ok/15 text-ok",
+  contratado: "bg-ok text-white",
   rechazado: "bg-bad/10 text-bad",
   retirado: "bg-muted/15 text-muted",
 };
@@ -115,7 +117,8 @@ export default function Panel({ rows }: { rows: Application[] }) {
               {r.source && <span>· {r.source}</span>}
               {(r.salary_min || r.salary_max) && (
                 <span>
-                  · {r.salary_min ?? "?"}-{r.salary_max ?? "?"}k
+                  · {money(r.salary_min, locale)}
+                  {r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}
                 </span>
               )}
               {r.url && (
@@ -136,6 +139,20 @@ export default function Panel({ rows }: { rows: Application[] }) {
   );
 }
 
+const plusDays = (isoDate: string, days: number) => {
+  const d = new Date(isoDate + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+};
+
+// Un clic en cualquier parte del campo abre el calendario, no solo en el icono.
+const openPicker = (e: React.MouseEvent<HTMLInputElement>) => {
+  try {
+    e.currentTarget.showPicker();
+  } catch {}
+};
+
 function NewForm({
   t,
   companies,
@@ -147,8 +164,13 @@ function NewForm({
   roles: string[];
   onDone: () => void;
 }) {
+  const { locale } = useLang();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
+  const [noSalary, setNoSalary] = useState(false);
+  const [salary, setSalary] = useState({ min: "", max: "" });
+  const today = new Date().toISOString().slice(0, 10);
+  const [dates, setDates] = useState({ applied: today, follow: plusDays(today, 15) });
 
   const field =
     "w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none focus:border-brand";
@@ -178,31 +200,90 @@ function NewForm({
         ))}
       </datalist>
 
-      <Chips name="work_mode" label={t.workMode} options={WORK_MODES} labels={t} />
-      <Chips name="status" label={t.status} options={STATUSES} labels={t} defaultValue="aplicado" />
-      <Chips name="source" label={t.source} options={SOURCES} />
+      <Chips name="work_mode" label={t.workMode} hint={t.workModeHint} options={WORK_MODES} labels={t} />
+      <Chips
+        name="status"
+        label={t.status}
+        hint={t.statusHint}
+        options={STATUSES}
+        labels={t}
+        defaultValue="aplicado"
+      />
+      <Chips name="source" label={t.source} hint={t.sourceHint} options={SOURCES} />
 
       <input name="url" type="url" placeholder={`${t.url} (${t.optional})`} className={field} />
 
+      <fieldset className="grid gap-2">
+        <legend className="text-sm text-muted">{t.salary}</legend>
+        <button
+          type="button"
+          onClick={() => setNoSalary(!noSalary)}
+          className={`w-fit rounded-full border px-3 py-1.5 text-sm transition ${
+            noSalary
+              ? "border-brand bg-brand-soft text-brand"
+              : "border-border text-muted hover:text-foreground"
+          }`}
+        >
+          {t.notSpecified}
+        </button>
+        {!noSalary && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                name="salary_min"
+                type="number"
+                placeholder={t.min}
+                value={salary.min}
+                onChange={(e) => setSalary({ ...salary, min: e.target.value })}
+                className={field}
+              />
+              <input
+                name="salary_max"
+                type="number"
+                placeholder={t.max}
+                value={salary.max}
+                onChange={(e) => setSalary({ ...salary, max: e.target.value })}
+                className={field}
+              />
+            </div>
+            {(salary.min || salary.max) && (
+              <p className="text-sm text-brand">
+                {money(toEuros(salary.min), locale)} - {money(toEuros(salary.max), locale)}
+              </p>
+            )}
+          </>
+        )}
+      </fieldset>
+
       <div className="grid grid-cols-2 gap-3">
-        <input name="salary_min" type="number" placeholder={`${t.salary} min`} className={field} />
-        <input name="salary_max" type="number" placeholder="max" className={field} />
+        <label className="grid gap-1 text-sm text-muted">
+          {t.appliedOn}
+          <input
+            name="applied_on"
+            type="date"
+            value={dates.applied}
+            onChange={(e) =>
+              setDates({ applied: e.target.value, follow: plusDays(e.target.value, 15) })
+            }
+            onClick={openPicker}
+            className={field}
+          />
+        </label>
+
+        <label className="grid gap-1 text-sm text-muted">
+          {t.followUpOn}
+          <input
+            name="follow_up_on"
+            type="date"
+            value={dates.follow}
+            onChange={(e) => setDates({ ...dates, follow: e.target.value })}
+            onClick={openPicker}
+            className={field}
+          />
+        </label>
       </div>
 
-      <label className="grid gap-1 text-sm text-muted">
-        {t.appliedOn}
-        <input
-          name="applied_on"
-          type="date"
-          defaultValue={new Date().toISOString().slice(0, 10)}
-          className={field}
-        />
-      </label>
-
-      <label className="grid gap-1 text-sm text-muted">
-        {t.followUpOn} ({t.optional})
-        <input name="follow_up_on" type="date" className={field} />
-      </label>
+      <p className="-mt-1 text-xs text-muted">{t.followUpHint}</p>
 
       {error && <p className="text-sm text-bad">{error}</p>}
 
@@ -228,12 +309,14 @@ function NewForm({
 function Chips({
   name,
   label,
+  hint,
   options,
   labels,
   defaultValue,
 }: {
   name: string;
   label: string;
+  hint?: string;
   options: readonly string[];
   labels?: Dict;
   defaultValue?: string;
@@ -241,6 +324,7 @@ function Chips({
   return (
     <fieldset className="grid gap-2">
       <legend className="text-sm text-muted">{label}</legend>
+      {hint && <p className="-mt-1 text-xs text-muted/80">{hint}</p>}
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <label key={o} className="cursor-pointer">

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light dark; /* calendarios y demas controles nativos siguen el tema */
   --background: #f6f7fb;
   --surface: #ffffff;
   --foreground: #14161d;

@@ -2,11 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
-
-const num = (v: FormDataEntryValue | null) => {
-  const n = Number(v);
-  return v && Number.isFinite(n) ? n : null;
-};
+import { toEuros } from "@/lib/money";
 
 const str = (v: FormDataEntryValue | null) => {
   const s = String(v ?? "").trim();
@@ -31,8 +27,8 @@ export async function addApplication(formData: FormData) {
     source: str(formData.get("source")),
     url: str(formData.get("url")),
     work_mode: str(formData.get("work_mode")),
-    salary_min: num(formData.get("salary_min")),
-    salary_max: num(formData.get("salary_max")),
+    salary_min: toEuros(formData.get("salary_min")),
+    salary_max: toEuros(formData.get("salary_max")),
     applied_on: str(formData.get("applied_on")) ?? new Date().toISOString().slice(0, 10),
     status: str(formData.get("status")) ?? "aplicado",
     follow_up_on: str(formData.get("follow_up_on")),
