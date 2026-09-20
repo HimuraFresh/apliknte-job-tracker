@@ -5,7 +5,13 @@ import { useLang, setLocale } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
 import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
-import { addApplication, setFollowedUp, setStatus } from "@/app/panel/actions";
+import {
+  addApplication,
+  updateApplication,
+  deleteApplication,
+  setFollowedUp,
+  setStatus,
+} from "@/app/panel/actions";
 import { signOut } from "@/app/entrar/actions";
 
 export type Application = {
@@ -37,12 +43,29 @@ const STATUS_TONE: Record<string, string> = {
 
 const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted";
 
+const CLOSED = ["contratado", "rechazado", "retirado"];
+const INTERVIEWING = ["cribado", "entrevista_1", "entrevista_2", "entrevista_3"];
+
 export default function Panel({ rows }: { rows: Application[] }) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Application | null>(null);
+  const showForm = open || editing !== null;
 
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
+
+  const summary = {
+    active: rows.filter((r) => !CLOSED.includes(r.status)).length,
+    waiting: rows.filter((r) => r.status === "aplicado").length,
+    interviews: rows.filter((r) => INTERVIEWING.includes(r.status)).length,
+    due: rows.filter(
+      (r) =>
+        !r.followed_up &&
+        !CLOSED.includes(r.status) &&
+        daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15)) <= 0,
+    ).length,
+  };
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-5 sm:p-8">
@@ -66,21 +89,43 @@ export default function Panel({ rows }: { rows: Application[] }) {
         </div>
       </header>
 
+      {rows.length > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Tile n={summary.active} label={t.summaryActive} tone="text-foreground" />
+          <Tile n={summary.waiting} label={t.summaryWaiting} tone="text-brand" />
+          <Tile n={summary.interviews} label={t.summaryInterviews} tone="text-warn" />
+          <Tile n={summary.due} label={t.summaryDue} tone={summary.due ? "text-warn" : "text-muted"} />
+        </div>
+      )}
+
       <div className="mt-8 flex items-center justify-between gap-3">
         <h2 className="text-lg font-medium">{t.yourApplications}</h2>
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => {
+            setEditing(null);
+            setOpen(!open);
+          }}
           className="shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
-          {open ? t.cancel : `+ ${t.newApplication}`}
+          {showForm ? t.cancel : `+ ${t.newApplication}`}
         </button>
       </div>
 
-      {open && (
-        <NewForm t={t} companies={companies} roles={roles} onDone={() => setOpen(false)} />
+      {showForm && (
+        <ApplicationForm
+          key={editing?.id ?? "new"}
+          t={t}
+          initial={editing}
+          companies={companies}
+          roles={roles}
+          onDone={() => {
+            setOpen(false);
+            setEditing(null);
+          }}
+        />
       )}
 
-      {!open && (
+      {!showForm && (
         <section className="mt-4 grid max-w-3xl gap-3">
           {rows.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
@@ -89,7 +134,7 @@ export default function Panel({ rows }: { rows: Application[] }) {
           )}
 
           {rows.map((r) => (
-            <Card key={r.id} r={r} t={t} locale={locale} />
+            <Card key={r.id} r={r} t={t} locale={locale} onEdit={() => setEditing(r)} />
           ))}
         </section>
       )}
@@ -97,9 +142,29 @@ export default function Panel({ rows }: { rows: Application[] }) {
   );
 }
 
-function Card({ r, t, locale }: { r: Application; t: Dict; locale: string }) {
+function Tile({ n, label, tone }: { n: number; label: string; tone: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface px-4 py-3">
+      <p className={`text-2xl font-semibold ${tone}`}>{n}</p>
+      <p className="text-xs text-muted">{label}</p>
+    </div>
+  );
+}
+
+function Card({
+  r,
+  t,
+  locale,
+  onEdit,
+}: {
+  r: Application;
+  t: Dict;
+  locale: string;
+  onEdit: () => void;
+}) {
   const [pending, start] = useTransition();
   const [picking, setPicking] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
 
   // Sin fecha guardada damos por supuestos 15 dias desde que aplicaste.
@@ -201,15 +266,32 @@ function Card({ r, t, locale }: { r: Application; t: Dict; locale: string }) {
           </button>
         </div>
 
-        {!r.followed_up && (
-          <span className={`text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
-            {daysToFollowUp === 0
-              ? t.followUpToday
-              : daysToFollowUp < 0
-                ? t.followUpDue(-daysToFollowUp)
-                : t.followUpSoon(daysToFollowUp)}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {!r.followed_up && (
+            <span className={`text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
+              {daysToFollowUp === 0
+                ? t.followUpToday
+                : daysToFollowUp < 0
+                  ? t.followUpDue(-daysToFollowUp)
+                  : t.followUpSoon(daysToFollowUp)}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onEdit}
+            className="text-xs text-muted transition hover:text-foreground"
+          >
+            {t.edit}
+          </button>
+          <button
+            type="button"
+            onClick={() => (confirming ? run(() => deleteApplication(r.id)) : setConfirming(true))}
+            onBlur={() => setConfirming(false)}
+            className={`text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
+          >
+            {confirming ? t.confirmDelete : t.delete}
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -222,13 +304,16 @@ const openPicker = (e: React.MouseEvent<HTMLInputElement>) => {
   } catch {}
 };
 
-function NewForm({
+// Mismo formulario para crear y para editar: cambia lo que se precarga y a donde se envia.
+function ApplicationForm({
   t,
+  initial,
   companies,
   roles,
   onDone,
 }: {
   t: Dict;
+  initial: Application | null;
   companies: string[];
   roles: string[];
   onDone: () => void;
@@ -236,11 +321,16 @@ function NewForm({
   const { locale } = useLang();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
-  const [noSalary, setNoSalary] = useState(false);
-  const [salary, setSalary] = useState({ min: "", max: "" });
+  const [noSalary, setNoSalary] = useState(
+    initial ? !initial.salary_min && !initial.salary_max : false,
+  );
+  const [salary, setSalary] = useState({
+    min: initial?.salary_min ? String(initial.salary_min) : "",
+    max: initial?.salary_max ? String(initial.salary_max) : "",
+  });
   const [dates, setDates] = useState(() => {
-    const hoy = today();
-    return { applied: hoy, follow: plusDays(hoy, 15) };
+    const hoy = initial?.applied_on ?? today();
+    return { applied: hoy, follow: initial?.follow_up_on ?? plusDays(hoy, 15) };
   });
 
   const field =
@@ -251,38 +341,71 @@ function NewForm({
       className="mt-3 grid gap-3 rounded-2xl border border-border bg-surface p-4"
       action={(fd) =>
         start(async () => {
-          const res = await addApplication(fd);
+          const res = initial ? await updateApplication(initial.id, fd) : await addApplication(fd);
           if (res?.error) setError(res.error);
           else onDone();
         })
       }
     >
-      <input name="company" required placeholder={t.company} list="companies" className={field} />
+      <input
+        name="company"
+        required
+        placeholder={t.company}
+        defaultValue={initial?.company ?? ""}
+        list="companies"
+        className={field}
+      />
       <datalist id="companies">
         {companies.map((c) => (
           <option key={c} value={c} />
         ))}
       </datalist>
 
-      <input name="role" required placeholder={t.role} list="roles" className={field} />
+      <input
+        name="role"
+        required
+        placeholder={t.role}
+        defaultValue={initial?.role ?? ""}
+        list="roles"
+        className={field}
+      />
       <datalist id="roles">
         {roles.map((r) => (
           <option key={r} value={r} />
         ))}
       </datalist>
 
-      <Chips name="work_mode" label={t.workMode} hint={t.workModeHint} options={WORK_MODES} labels={t} />
+      <Chips
+        name="work_mode"
+        label={t.workMode}
+        hint={t.workModeHint}
+        options={WORK_MODES}
+        labels={t}
+        defaultValue={initial?.work_mode ?? undefined}
+      />
       <Chips
         name="status"
         label={t.status}
         hint={t.statusHint}
         options={STATUSES}
         labels={t}
-        defaultValue="aplicado"
+        defaultValue={initial?.status ?? "aplicado"}
       />
-      <Chips name="source" label={t.source} hint={t.sourceHint} options={SOURCES} />
+      <Chips
+        name="source"
+        label={t.source}
+        hint={t.sourceHint}
+        options={SOURCES}
+        defaultValue={initial?.source ?? undefined}
+      />
 
-      <input name="url" type="url" placeholder={`${t.url} (${t.optional})`} className={field} />
+      <input
+        name="url"
+        type="url"
+        placeholder={`${t.url} (${t.optional})`}
+        defaultValue={initial?.url ?? ""}
+        className={field}
+      />
 
       <fieldset className="grid gap-2">
         <legend className="text-sm text-muted">{t.salary}</legend>

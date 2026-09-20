@@ -10,21 +10,15 @@ const str = (v: FormDataEntryValue | null) => {
   return s === "" ? null : s;
 };
 
-export async function addApplication(formData: FormData) {
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "auth" };
-
+// Mismos campos para crear y para editar.
+function readForm(formData: FormData) {
   const company = str(formData.get("company"));
   const role = str(formData.get("role"));
-  if (!company || !role) return { error: "required" };
+  if (!company || !role) return null;
 
   const appliedOn = str(formData.get("applied_on")) ?? today();
 
-  const { error } = await supabase.from("applications").insert({
-    user_id: user.id,
+  return {
     company,
     role,
     source: str(formData.get("source")),
@@ -36,8 +30,37 @@ export async function addApplication(formData: FormData) {
     status: str(formData.get("status")) ?? "aplicado",
     // Si no la elige, se asigna sola a 15 dias de la fecha de aplicacion.
     follow_up_on: str(formData.get("follow_up_on")) ?? plusDays(appliedOn, 15),
-  });
+  };
+}
 
+export async function addApplication(formData: FormData) {
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "auth" };
+
+  const fields = readForm(formData);
+  if (!fields) return { error: "required" };
+
+  const { error } = await supabase
+    .from("applications")
+    .insert({ user_id: user.id, ...fields });
+
+  if (error) return { error: error.message };
+  revalidatePath("/panel");
+  return {};
+}
+
+export async function updateApplication(id: string, formData: FormData) {
+  const fields = readForm(formData);
+  if (!fields) return { error: "required" };
+  return patch(id, fields);
+}
+
+export async function deleteApplication(id: string) {
+  const supabase = await supabaseServer();
+  const { error } = await supabase.from("applications").delete().eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/panel");
   return {};
