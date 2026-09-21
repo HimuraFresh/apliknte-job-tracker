@@ -117,28 +117,73 @@ nadie entiende a los dos meses.
 - **Español e inglés**, se cambia en cualquier momento.
 - **Cuentas** con correo y contraseña, incluida la recuperación.
 
+### Tecnologías
+
+- [Next.js 16](https://nextjs.org) (App Router, Server Actions) + TypeScript
+- [Supabase](https://supabase.com): Postgres, autenticación y seguridad a
+  nivel de fila, para que cada usuario solo pueda leer y escribir sus propios
+  datos
+- [Tailwind CSS 4](https://tailwindcss.com)
+- Desplegada en [Vercel](https://vercel.com)
+
+Todo funciona con planes gratuitos.
+
 ### Cómo se hizo
 
-Construida con [Claude Code](https://claude.com/claude-code) y los plugins
-agent-skills, ponytail, graphify y ui-ux-pro-max (detalle arriba, en la
-sección *How it was built*). Las decisiones de producto y su porqué están en
+Este proyecto se construyó con [Claude Code](https://claude.com/claude-code),
+usando varios plugins que cambian la forma de trabajar del modelo:
+
+- **[agent-skills](https://github.com/addyosmani/agent-skills)** (Addy Osmani):
+  una entrevista estructurada antes de escribir código, para concretar qué
+  problema tenía que resolver de verdad la herramienta.
+- **[ponytail](https://github.com/DietrichGebert/ponytail)**: empuja hacia la
+  solución más simple que funcione. Por eso se descartaron varias funciones
+  previstas (un importador de un solo uso, una lista precargada de 1.000
+  empresas y un espacio publicitario sin anunciantes).
+- **[graphify](https://github.com/Graphify-Labs/graphify)** y
+  **[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)**:
+  instalados para las próximas fases (mapa del código y diseño visual).
+
+Las decisiones de producto y su porqué están en
 [`docs/intent/tracker.md`](docs/intent/tracker.md).
 
 ### Arrancarla en local
 
 Necesitas Node.js 20 o superior y un proyecto gratuito de Supabase.
 
-1. Clona el repositorio y ejecuta `npm install`.
-2. En Supabase, abre **SQL Editor** y ejecuta
-   [`supabase/schema.sql`](supabase/schema.sql).
+1. Clona el repositorio e instala las dependencias:
+   ```bash
+   git clone https://github.com/HimuraFresh/apliknte-job-tracker.git
+   cd apliknte-job-tracker
+   npm install
+   ```
+2. En tu proyecto de Supabase, abre **SQL Editor** y ejecuta
+   [`supabase/schema.sql`](supabase/schema.sql). Crea las tablas y las reglas
+   de seguridad a nivel de fila.
 3. Copia `.env.example` como `.env.local` y rellena la URL del proyecto y la
-   clave publishable, que están en **Project Settings → API Keys**. Nunca
-   pongas aquí la clave secreta (`service_role`).
-4. `npm run dev` y abre http://localhost:3000.
+   clave publishable (anon), que están en **Project Settings → API Keys**:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+   ```
+   Nunca pongas en esta app la clave secreta (`service_role`).
+4. Arráncala y abre http://localhost:3000:
+   ```bash
+   npm run dev
+   ```
 
-Las comprobaciones de fechas se ejecutan con `npm test`.
+La lógica de fechas está cubierta por tests automáticos: `npm test`.
 
-Cualquier crítica, sugerencia o mejora es bienvenida.
+### Hoja de ruta
+
+- [x] Cuentas, alta rápida, estado y seguimiento desde la ficha, editar y borrar, resumen
+- [ ] Despliegue público
+- [ ] Buscador, filtros y agrupación por empresa y por puesto
+- [ ] Subir CVs en PDF y marcar cuál enviaste
+- [ ] Pulido visual y app instalable en el móvil (PWA)
+- [ ] Exportar a CSV
+
+Cualquier crítica, sugerencia, issue o pull request es bienvenida.
 
 ### Licencia
 
