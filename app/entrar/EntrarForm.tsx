@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { signIn, signUp, requestPasswordReset } from "./actions";
 import { useLang, setLocale } from "@/lib/lang";
+import Logo from "@/components/Logo";
 
 const ACTIONS = { in: signIn, up: signUp, reset: requestPasswordReset };
 
@@ -23,7 +24,9 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight">{t.appName}</h1>
+            <h1 className="text-3xl">
+              <Logo />
+            </h1>
             <p className="mt-1 text-muted">{t.tagline}</p>
           </div>
           <div className="flex overflow-hidden rounded-lg border border-border text-xs">

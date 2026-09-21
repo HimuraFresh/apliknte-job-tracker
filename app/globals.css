@@ -1,29 +1,20 @@
 @import "tailwindcss";
 
+/* Siempre clara, blanco y azul: se ignora el modo oscuro del sistema a proposito. */
 :root {
-  color-scheme: light dark; /* calendarios y demas controles nativos siguen el tema */
-  --background: #f6f7fb;
+  color-scheme: light; /* calendarios y controles nativos tambien en claro */
+  --background: #f5f8fc;
   --surface: #ffffff;
-  --foreground: #14161d;
-  --muted: #6b7280;
-  --border: #e6e8f0;
-  --brand: #5b5bd6;
-  --brand-soft: #eceafe;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --brand: #2563eb;
+  --brand-strong: #1d4ed8; /* el nombre "Apliknte" */
+  --brand-soft: #eff6ff;
+  --accent: #38bdf8; /* el punto de "Apliknte." */
   --ok: #16a34a;
   --warn: #d97706;
   --bad: #dc2626;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0b0d12;
-    --surface: #151821;
-    --foreground: #eceef5;
-    --muted: #99a0b0;
-    --border: #262b38;
-    --brand: #8b8bf0;
-    --brand-soft: #23233a;
-  }
 }
 
 @theme inline {
@@ -33,7 +24,9 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
