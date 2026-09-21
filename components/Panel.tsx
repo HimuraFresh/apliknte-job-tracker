@@ -84,7 +84,9 @@ export default function Panel({ rows }: { rows: Application[] }) {
             {locale === "es" ? "EN" : "ES"}
           </button>
           <form action={signOut}>
-            <button className="transition hover:text-foreground">{t.signOut}</button>
+            <button className="rounded-full bg-bad/10 px-3 py-1 text-bad transition hover:bg-bad/20">
+              {t.signOut}
+            </button>
           </form>
         </div>
       </header>
