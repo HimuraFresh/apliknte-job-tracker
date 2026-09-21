@@ -1,6 +1,6 @@
 # Apliknte — job application tracker
 
-*[Leer en español](#español)*
+**Try it live: [apliknte.vercel.app](https://apliknte.vercel.app)** · *[Leer en español](#español)*
 
 A web app to log job applications in seconds and always know which ones
 need a follow-up. It replaces the spreadsheet most of us end up with: three
@@ -28,7 +28,7 @@ columns at first, an unreadable endless scroll two months later.
 - [Supabase](https://supabase.com): Postgres, auth, and row-level security so
   every user can only ever read and write their own rows
 - [Tailwind CSS 4](https://tailwindcss.com)
-- Deployed on [Vercel](https://vercel.com)
+- Deployed on [Vercel](https://vercel.com) at [apliknte.vercel.app](https://apliknte.vercel.app)
 
 Everything runs on free tiers.
 
@@ -81,7 +81,7 @@ Date logic is covered by automated tests: `npm test`.
 ## Roadmap
 
 - [x] Accounts, quick entry, status and follow-up from the card, edit/delete, summary
-- [ ] Public deployment
+- [x] Public deployment
 - [ ] Search, filters, and grouping by company and by role
 - [ ] Upload CVs as PDF and tag which one you sent
 - [ ] Visual polish and installable mobile app (PWA)
@@ -96,6 +96,8 @@ Feedback, issues and pull requests are very welcome.
 ---
 
 ## Español
+
+**Pruébala: [apliknte.vercel.app](https://apliknte.vercel.app)**
 
 Una aplicación web para registrar candidaturas de empleo en segundos y saber
 siempre a cuáles toca hacer seguimiento. Sustituye a la hoja de cálculo con la
@@ -124,7 +126,7 @@ nadie entiende a los dos meses.
   nivel de fila, para que cada usuario solo pueda leer y escribir sus propios
   datos
 - [Tailwind CSS 4](https://tailwindcss.com)
-- Desplegada en [Vercel](https://vercel.com)
+- Desplegada en [Vercel](https://vercel.com) en [apliknte.vercel.app](https://apliknte.vercel.app)
 
 Todo funciona con planes gratuitos.
 
@@ -177,7 +179,7 @@ La lógica de fechas está cubierta por tests automáticos: `npm test`.
 ### Hoja de ruta
 
 - [x] Cuentas, alta rápida, estado y seguimiento desde la ficha, editar y borrar, resumen
-- [ ] Despliegue público
+- [x] Despliegue público
 - [ ] Buscador, filtros y agrupación por empresa y por puesto
 - [ ] Subir CVs en PDF y marcar cuál enviaste
 - [ ] Pulido visual y app instalable en el móvil (PWA)
