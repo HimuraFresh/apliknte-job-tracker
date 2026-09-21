@@ -34,6 +34,9 @@ export async function signUp(_prev: State, formData: FormData): Promise<State> {
     options: { emailRedirectTo: `${origin}/auth/callback` },
   });
   if (error) return fail(error);
+  // Con "Confirm email" activado, Supabase no da error si el correo ya existe (para no
+  // revelar quien esta registrado): devuelve un usuario sin identidades y no envia nada.
+  if (data.user?.identities?.length === 0) return { error: "user_already_exists" };
   // Si Supabase pide confirmar el correo, no hay sesion todavia.
   if (!data.session) return { message: "checkEmail" };
   redirect("/panel");

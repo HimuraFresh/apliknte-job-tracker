@@ -13,9 +13,14 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
   const { t, locale } = useLang();
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [state, action, pending] = useActionState(ACTIONS[mode], {});
+  // Los mensajes son del modo en que se envio el formulario: al cambiar de modo desaparecen.
+  const [sentFrom, setSentFrom] = useState(mode);
+  const current = sentFrom === mode;
+  const exists = current && ["user_already_exists", "email_exists"].includes(state.error ?? "");
   // Al crear cuenta no se envia nada hasta cumplir los requisitos: no gasta intentos ni correos.
   const blocked = mode === "up" && !passwordOk(password);
-  const [state, action, pending] = useActionState(ACTIONS[mode], {});
 
   const tab = (active: boolean) =>
     `flex-1 rounded-lg py-2.5 text-sm font-medium transition ${
@@ -65,11 +70,13 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
           </div>
         )}
 
-        <form action={action} className="mt-4 grid gap-3">
+        <form action={action} onSubmit={() => setSentFrom(mode)} className="mt-4 grid gap-3">
           <input
             name="email"
             type="email"
             required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder={t.email}
             autoComplete="email"
             className={field}
@@ -110,11 +117,25 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
         {linkError && !state.error && !state.message && (
           <p className="mt-3 text-sm text-bad">{t.linkError}</p>
         )}
-        {state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>}
-        {state.message === "checkEmail" && (
+        {exists ? (
+          <div className="mt-3 grid gap-2 rounded-xl bg-bad/5 p-3 text-sm">
+            <p className="text-bad">{t.emailExists}</p>
+            <button
+              type="button"
+              onClick={() => setMode("reset")}
+              className="w-fit rounded-lg bg-brand px-3 py-1.5 font-medium text-white transition hover:opacity-90"
+            >
+              {t.recoverPassword}
+            </button>
+          </div>
+        ) : (
+          current &&
+          state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>
+        )}
+        {current && state.message === "checkEmail" && (
           <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.checkEmail}</p>
         )}
-        {state.message === "resetSent" && (
+        {current && state.message === "resetSent" && (
           <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.resetSent}</p>
         )}
       </div>
