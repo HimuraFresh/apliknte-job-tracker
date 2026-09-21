@@ -71,7 +71,7 @@ export default function Panel({ rows }: { rows: Application[] }) {
     <main className="mx-auto w-full max-w-5xl flex-1 p-5 sm:p-8">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t.appName}</h1>
+          <h1 className="text-lg font-semibold tracking-tight sm:text-2xl">{t.appName}</h1>
           <p className="text-sm text-muted">
             {rows.length} {rows.length === 1 ? t.totalOne : t.total}
           </p>
