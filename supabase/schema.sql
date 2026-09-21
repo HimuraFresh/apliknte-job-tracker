@@ -53,3 +53,19 @@ create policy "own cvs insert" on storage.objects for insert
   with check (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "own cvs delete" on storage.objects for delete
   using (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Mensajes de ayuda y sugerencias. Los usuarios solo pueden escribir (no leer):
+-- se leen desde el panel de Supabase. El correo va para poder contestar.
+create table if not exists public.feedback (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null references auth.users on delete cascade,
+  email      text,
+  kind       text not null check (kind in ('error', 'idea', 'duda')),
+  message    text not null check (char_length(message) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+alter table public.feedback enable row level security;
+
+create policy "send own feedback" on public.feedback
+  for insert with check (auth.uid() = user_id);

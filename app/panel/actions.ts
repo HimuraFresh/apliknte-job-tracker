@@ -126,3 +126,19 @@ export async function setStatus(id: string, status: string) {
 export async function setFollowedUp(id: string, followed_up: boolean) {
   return patch(id, { followed_up });
 }
+
+const FEEDBACK_KINDS = ["error", "idea", "duda"];
+
+export async function sendFeedback(kind: string, message: string) {
+  const { supabase, user } = await currentUser();
+  if (!user) return { error: "auth" };
+
+  const text = message.trim().slice(0, 2000);
+  if (!text || !FEEDBACK_KINDS.includes(kind)) return { error: "required" };
+
+  const { error } = await supabase
+    .from("feedback")
+    .insert({ user_id: user.id, email: user.email, kind, message: text });
+  if (error) return { error: error.message };
+  return {};
+}

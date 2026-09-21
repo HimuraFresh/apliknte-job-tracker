@@ -14,6 +14,7 @@ import {
 } from "@/app/panel/actions";
 import { signOut } from "@/app/entrar/actions";
 import Logo from "@/components/Logo";
+import HelpPanel from "@/components/HelpPanel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export type Application = {
@@ -92,6 +93,7 @@ export default function Panel({
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<Filter | null>(null);
   const [warning, setWarning] = useState<string>();
+  const [helpOpen, setHelpOpen] = useState(false);
   const showForm = open || editing !== null;
 
   // Los recuadros a 0 no se muestran. Si el filtro elegido se queda a 0, se ven todas.
@@ -137,6 +139,13 @@ export default function Panel({
           >
             {locale === "es" ? "EN" : "ES"}
           </button>
+          <button
+            onClick={() => setHelpOpen(!helpOpen)}
+            aria-expanded={helpOpen}
+            className="rounded-full bg-brand-soft px-3 py-1 text-brand transition hover:bg-brand/20"
+          >
+            {t.help}
+          </button>
           <form action={signOut}>
             <button className="rounded-full bg-bad/10 px-3 py-1 text-bad transition hover:bg-bad/20">
               {t.signOut}
@@ -144,6 +153,8 @@ export default function Panel({
           </form>
         </div>
       </header>
+
+      {helpOpen && <HelpPanel onClose={() => setHelpOpen(false)} />}
 
       {tiles.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
