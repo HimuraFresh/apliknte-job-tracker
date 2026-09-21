@@ -2,9 +2,17 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import type { AuthError } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabase/server";
 
 type State = { error?: string; message?: string };
+
+// Se devuelve el codigo del error, no el texto en ingles de Supabase: la pantalla lo
+// traduce (dict.authError). El texto original queda en los logs de Vercel.
+function fail(error: AuthError): State {
+  console.error("auth:", error.code, error.message);
+  return { error: error.code ?? "unknown" };
+}
 
 export async function signIn(_prev: State, formData: FormData): Promise<State> {
   const supabase = await supabaseServer();
@@ -12,7 +20,7 @@ export async function signIn(_prev: State, formData: FormData): Promise<State> {
     email: String(formData.get("email")),
     password: String(formData.get("password")),
   });
-  if (error) return { error: error.message };
+  if (error) return fail(error);
   redirect("/panel");
 }
 
@@ -25,7 +33,7 @@ export async function signUp(_prev: State, formData: FormData): Promise<State> {
     // El enlace del correo de confirmacion vuelve aqui y deja la sesion iniciada.
     options: { emailRedirectTo: `${origin}/auth/callback` },
   });
-  if (error) return { error: error.message };
+  if (error) return fail(error);
   // Si Supabase pide confirmar el correo, no hay sesion todavia.
   if (!data.session) return { message: "checkEmail" };
   redirect("/panel");
@@ -37,7 +45,7 @@ export async function requestPasswordReset(_prev: State, formData: FormData): Pr
   const { error } = await supabase.auth.resetPasswordForEmail(String(formData.get("email")), {
     redirectTo: `${origin}/auth/callback?next=/nueva-contrasena`,
   });
-  if (error) return { error: error.message };
+  if (error) return fail(error);
   // Mismo mensaje exista o no la cuenta: asi no se puede averiguar quien esta registrado.
   return { message: "resetSent" };
 }
@@ -47,7 +55,7 @@ export async function updatePassword(_prev: State, formData: FormData): Promise<
   const { error } = await supabase.auth.updateUser({
     password: String(formData.get("password")),
   });
-  if (error) return { error: error.message };
+  if (error) return fail(error);
   redirect("/panel");
 }
 

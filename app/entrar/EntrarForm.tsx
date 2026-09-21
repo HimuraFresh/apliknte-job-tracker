@@ -4,12 +4,17 @@ import { useActionState, useState } from "react";
 import { signIn, signUp, requestPasswordReset } from "./actions";
 import { useLang, setLocale } from "@/lib/lang";
 import Logo from "@/components/Logo";
+import PasswordField from "@/components/PasswordField";
+import { passwordOk } from "@/lib/password";
 
 const ACTIONS = { in: signIn, up: signUp, reset: requestPasswordReset };
 
 export default function EntrarForm({ linkError }: { linkError: boolean }) {
   const { t, locale } = useLang();
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const [password, setPassword] = useState("");
+  // Al crear cuenta no se envia nada hasta cumplir los requisitos: no gasta intentos ni correos.
+  const blocked = mode === "up" && !passwordOk(password);
   const [state, action, pending] = useActionState(ACTIONS[mode], {});
 
   const tab = (active: boolean) =>
@@ -70,19 +75,15 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             className={field}
           />
           {mode !== "reset" && (
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              placeholder={t.password}
+            <PasswordField
+              value={password}
+              onChange={setPassword}
+              checklist={mode === "up"}
               autoComplete={mode === "in" ? "current-password" : "new-password"}
-              className={field}
             />
           )}
-          {mode === "up" && <p className="-mt-1 text-xs text-muted">{t.passwordHint}</p>}
           <button
-            disabled={pending}
+            disabled={pending || blocked}
             className="rounded-xl bg-brand px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
           >
             {mode === "in" ? t.signIn : mode === "up" ? t.signUp : t.sendResetLink}
@@ -109,7 +110,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
         {linkError && !state.error && !state.message && (
           <p className="mt-3 text-sm text-bad">{t.linkError}</p>
         )}
-        {state.error && <p className="mt-3 text-sm text-bad">{state.error}</p>}
+        {state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>}
         {state.message === "checkEmail" && (
           <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.checkEmail}</p>
         )}
