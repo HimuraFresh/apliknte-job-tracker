@@ -18,9 +18,12 @@ export async function signIn(_prev: State, formData: FormData): Promise<State> {
 
 export async function signUp(_prev: State, formData: FormData): Promise<State> {
   const supabase = await supabaseServer();
+  const origin = (await headers()).get("origin") ?? "http://localhost:3000";
   const { data, error } = await supabase.auth.signUp({
     email: String(formData.get("email")),
     password: String(formData.get("password")),
+    // El enlace del correo de confirmacion vuelve aqui y deja la sesion iniciada.
+    options: { emailRedirectTo: `${origin}/auth/callback` },
   });
   if (error) return { error: error.message };
   // Si Supabase pide confirmar el correo, no hay sesion todavia.
