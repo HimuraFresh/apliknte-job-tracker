@@ -40,3 +40,16 @@ create policy "own cv_versions" on public.cv_versions
 
 create policy "own applications" on public.applications
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Almacen privado de CVs: solo PDF y hasta 5 MB.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('cvs', 'cvs', false, 5242880, array['application/pdf'])
+on conflict (id) do nothing;
+
+-- Cada usuario solo puede tocar su carpeta: cvs/<su id>/archivo.pdf
+create policy "own cvs select" on storage.objects for select
+  using (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own cvs insert" on storage.objects for insert
+  with check (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own cvs delete" on storage.objects for delete
+  using (bucket_id = 'cvs' and (storage.foldername(name))[1] = auth.uid()::text);

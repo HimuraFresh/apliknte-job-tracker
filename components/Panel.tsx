@@ -14,6 +14,7 @@ import {
 } from "@/app/panel/actions";
 import { signOut } from "@/app/entrar/actions";
 import Logo from "@/components/Logo";
+import { supabaseBrowser } from "@/lib/supabase/client";
 
 export type Application = {
   id: string;
@@ -28,7 +29,21 @@ export type Application = {
   status: string;
   follow_up_on: string | null;
   followed_up: boolean;
+  cv_version_id: string | null;
 };
+
+export type Cv = { id: string; label: string };
+
+const MAX_CV_BYTES = 5 * 1024 * 1024;
+
+// Busqueda sin tildes ni mayusculas: "iberdrola" encuentra "Iberdrola", "tecnico" encuentra "técnico".
+const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+// Aspecto comun de los botones tipo "globito" que se marcan y desmarcan.
+const chip = (on: boolean) =>
+  `rounded-full border px-3 py-1.5 text-sm transition ${
+    on ? "border-brand bg-brand-soft text-brand" : "border-border text-muted hover:text-foreground"
+  }`;
 
 const STATUS_TONE: Record<string, string> = {
   aplicado: "bg-brand-soft text-brand",
@@ -47,11 +62,25 @@ const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted"
 const CLOSED = ["contratado", "rechazado", "retirado"];
 const INTERVIEWING = ["cribado", "entrevista_1", "entrevista_2", "entrevista_3"];
 
-export default function Panel({ rows }: { rows: Application[] }) {
+export default function Panel({
+  rows,
+  cvs,
+  userId,
+}: {
+  rows: Application[];
+  cvs: Cv[];
+  userId: string;
+}) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
+  const [query, setQuery] = useState("");
+  const [warning, setWarning] = useState<string>();
   const showForm = open || editing !== null;
+
+  const q = norm(query.trim());
+  const visible = q ? rows.filter((r) => norm(`${r.company} ${r.role}`).includes(q)) : rows;
+  const cvLabels = new Map(cvs.map((cv) => [cv.id, cv.label]));
 
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
@@ -103,14 +132,25 @@ export default function Panel({ rows }: { rows: Application[] }) {
         </div>
       )}
 
-      <div className="mt-8 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-medium">{t.yourApplications}</h2>
+      {/* Movil: titulo y boton arriba, buscador debajo a todo lo ancho. Ordenador: los tres en fila. */}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <h2 className="order-1 text-lg font-medium">{t.yourApplications}</h2>
+        {!showForm && rows.length > 0 && (
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.search}
+            aria-label={t.search}
+            className="order-3 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-brand sm:order-2 sm:w-auto sm:flex-1"
+          />
+        )}
         <button
           onClick={() => {
             setEditing(null);
             setOpen(!open);
           }}
-          className="shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+          className="order-2 ml-auto shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 sm:order-3 sm:ml-0"
         >
           {showForm ? t.cancel : `+ ${t.newApplication}`}
         </button>
@@ -123,11 +163,23 @@ export default function Panel({ rows }: { rows: Application[] }) {
           initial={editing}
           companies={companies}
           roles={roles}
-          onDone={() => {
+          cvs={cvs}
+          userId={userId}
+          onDone={(w) => {
             setOpen(false);
             setEditing(null);
+            setWarning(w);
           }}
         />
+      )}
+
+      {warning && (
+        <div className="mt-4 flex max-w-3xl items-start justify-between gap-3 rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm text-warn">
+          <p>{warning}</p>
+          <button onClick={() => setWarning(undefined)} aria-label={t.cancel} className="shrink-0">
+            ✕
+          </button>
+        </div>
       )}
 
       {!showForm && (
@@ -138,8 +190,24 @@ export default function Panel({ rows }: { rows: Application[] }) {
             </p>
           )}
 
-          {rows.map((r) => (
-            <Card key={r.id} r={r} t={t} locale={locale} onEdit={() => setEditing(r)} />
+          {q && visible.length === 0 && (
+            <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
+              {t.noResults(query.trim())}
+            </p>
+          )}
+
+          {visible.map((r) => (
+            <Card
+              key={r.id}
+              r={r}
+              t={t}
+              locale={locale}
+              cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
+              onEdit={() => {
+                setWarning(undefined);
+                setEditing(r);
+              }}
+            />
           ))}
         </section>
       )}
@@ -160,11 +228,13 @@ function Card({
   r,
   t,
   locale,
+  cvLabel,
   onEdit,
 }: {
   r: Application;
   t: Dict;
   locale: string;
+  cvLabel?: string;
   onEdit: () => void;
 }) {
   const [pending, start] = useTransition();
@@ -246,6 +316,16 @@ function Card({
             · {t.url}
           </a>
         )}
+        {cvLabel && (
+          <a
+            href={`/cv/${r.cv_version_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand hover:underline"
+          >
+            · CV: {cvLabel}
+          </a>
+        )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
@@ -315,13 +395,17 @@ function ApplicationForm({
   initial,
   companies,
   roles,
+  cvs,
+  userId,
   onDone,
 }: {
   t: Dict;
   initial: Application | null;
   companies: string[];
   roles: string[];
-  onDone: () => void;
+  cvs: Cv[];
+  userId: string;
+  onDone: (warning?: string) => void;
 }) {
   const { locale } = useLang();
   const [pending, start] = useTransition();
@@ -337,6 +421,44 @@ function ApplicationForm({
     const hoy = initial?.applied_on ?? today();
     return { applied: hoy, follow: initial?.follow_up_on ?? plusDays(hoy, 15) };
   });
+  const [cvId, setCvId] = useState(initial?.cv_version_id ?? null);
+  const [uploading, setUploading] = useState(false);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [cvLabel, setCvLabel] = useState("");
+  const [cvError, setCvError] = useState<string>();
+
+  // El PDF se sube directo del navegador al almacen: no pasa por nuestro servidor
+  // (que limita el tamano de lo que recibe). Al servidor solo le llega la ruta.
+  // Si la subida falla, la candidatura se guarda igual y se avisa: nunca bloquea.
+  async function attachCv(fd: FormData) {
+    if (!uploading || !cvFile) {
+      if (cvId) fd.set("cv_version_id", cvId);
+      return undefined;
+    }
+    const path = `${userId}/${crypto.randomUUID()}.pdf`;
+    const { error } = await supabaseBrowser()
+      .storage.from("cvs")
+      .upload(path, cvFile, { contentType: "application/pdf" });
+    if (error) {
+      if (cvId) fd.set("cv_version_id", cvId);
+      return t.cvSaveWarning(error.message);
+    }
+    fd.set("cv_new_path", path);
+    fd.set("cv_new_label", cvLabel.trim() || cvFile.name.replace(/\.pdf$/i, ""));
+    return undefined;
+  }
+
+  function pickFile(file: File | undefined) {
+    const problem = !file
+      ? undefined
+      : file.type !== "application/pdf"
+        ? t.cvNotPdf
+        : file.size > MAX_CV_BYTES
+          ? t.cvTooBig
+          : undefined;
+    setCvError(problem);
+    setCvFile(file && !problem ? file : null);
+  }
 
   const field =
     "w-full rounded-xl border border-border bg-surface px-4 py-3 outline-none focus:border-brand";
@@ -346,9 +468,10 @@ function ApplicationForm({
       className="mt-3 grid gap-3 rounded-2xl border border-border bg-surface p-4"
       action={(fd) =>
         start(async () => {
+          const warning = await attachCv(fd);
           const res = initial ? await updateApplication(initial.id, fd) : await addApplication(fd);
           if (res?.error) setError(res.error);
-          else onDone();
+          else onDone(warning);
         })
       }
     >
@@ -417,11 +540,7 @@ function ApplicationForm({
         <button
           type="button"
           onClick={() => setNoSalary(!noSalary)}
-          className={`w-fit rounded-full border px-3 py-1.5 text-sm transition ${
-            noSalary
-              ? "border-brand bg-brand-soft text-brand"
-              : "border-border text-muted hover:text-foreground"
-          }`}
+          className={`w-fit ${chip(noSalary)}`}
         >
           {t.notSpecified}
         </button>
@@ -484,6 +603,54 @@ function ApplicationForm({
 
       <p className="-mt-1 text-xs text-muted">{t.followUpHint}</p>
 
+      <fieldset className="grid gap-2">
+        <legend className="text-sm text-muted">{t.cvSection}</legend>
+        <div className="flex flex-wrap gap-2">
+          {cvs.map((cv) => (
+            <button
+              key={cv.id}
+              type="button"
+              onClick={() => {
+                setUploading(false);
+                setCvId(cvId === cv.id ? null : cv.id);
+              }}
+              className={chip(!uploading && cvId === cv.id)}
+            >
+              {cv.label}
+            </button>
+          ))}
+          <button type="button" onClick={() => setUploading(!uploading)} className={chip(uploading)}>
+            {t.cvUploadNew}
+          </button>
+        </div>
+        {uploading && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {/* Sin name: el archivo no viaja en el formulario, lo sube attachCv */}
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => pickFile(e.target.files?.[0])}
+              className={`${field} text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:text-brand`}
+            />
+            <input
+              value={cvLabel}
+              onChange={(e) => setCvLabel(e.target.value)}
+              placeholder={t.cvTypePlaceholder}
+              list="cv-labels"
+              className={field}
+            />
+            <datalist id="cv-labels">
+              {cvs.map((cv) => (
+                <option key={cv.id} value={cv.label} />
+              ))}
+            </datalist>
+            <p className={`text-xs sm:col-span-2 ${cvError ? "text-bad" : "text-muted"}`}>
+              {cvError ?? t.cvHint}
+            </p>
+          </div>
+        )}
+      </fieldset>
+
       {error && <p className="text-sm text-bad">{error}</p>}
 
       <div className="flex gap-3">
@@ -495,7 +662,7 @@ function ApplicationForm({
         </button>
         <button
           type="button"
-          onClick={onDone}
+          onClick={() => onDone()}
           className="rounded-xl border border-border px-4 py-3 text-muted transition hover:text-foreground"
         >
           {t.cancel}
