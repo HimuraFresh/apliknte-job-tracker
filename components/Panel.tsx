@@ -62,6 +62,21 @@ const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted"
 const CLOSED = ["contratado", "rechazado", "retirado"];
 const INTERVIEWING = ["cribado", "entrevista_1", "entrevista_2", "entrevista_3"];
 
+// Sin fecha guardada damos por supuestos 15 dias desde que aplicaste.
+const isDue = (r: Application) =>
+  !r.followed_up &&
+  !CLOSED.includes(r.status) &&
+  daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15)) <= 0;
+
+// Cada recuadro del resumen cuenta y filtra con la misma regla.
+const FILTERS = {
+  active: (r: Application) => !CLOSED.includes(r.status),
+  waiting: (r: Application) => r.status === "aplicado",
+  interviews: (r: Application) => INTERVIEWING.includes(r.status),
+  due: isDue,
+};
+type Filter = keyof typeof FILTERS;
+
 export default function Panel({
   rows,
   cvs,
@@ -75,27 +90,34 @@ export default function Panel({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Application | null>(null);
   const [query, setQuery] = useState("");
+  const [picked, setPicked] = useState<Filter | null>(null);
   const [warning, setWarning] = useState<string>();
   const showForm = open || editing !== null;
 
+  // Los recuadros a 0 no se muestran. Si el filtro elegido se queda a 0, se ven todas.
+  const tiles = (
+    [
+      { key: "active", label: t.summaryActive, tone: "text-foreground" },
+      { key: "waiting", label: t.summaryWaiting, tone: "text-brand" },
+      { key: "interviews", label: t.summaryInterviews, tone: "text-warn" },
+      { key: "due", label: t.summaryDue, tone: "text-warn" },
+    ] as const
+  )
+    .map((tile) => ({ ...tile, n: rows.filter(FILTERS[tile.key]).length }))
+    .filter((tile) => tile.n > 0);
+  const filter = tiles.find((tile) => tile.key === picked);
+
   const q = norm(query.trim());
-  const visible = q ? rows.filter((r) => norm(`${r.company} ${r.role}`).includes(q)) : rows;
+  const visible = rows.filter(
+    (r) =>
+      (!filter || FILTERS[filter.key](r)) &&
+      (!q || norm(`${r.company} ${r.role}`).includes(q)),
+  );
   const cvLabels = new Map(cvs.map((cv) => [cv.id, cv.label]));
 
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
 
-  const summary = {
-    active: rows.filter((r) => !CLOSED.includes(r.status)).length,
-    waiting: rows.filter((r) => r.status === "aplicado").length,
-    interviews: rows.filter((r) => INTERVIEWING.includes(r.status)).length,
-    due: rows.filter(
-      (r) =>
-        !r.followed_up &&
-        !CLOSED.includes(r.status) &&
-        daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15)) <= 0,
-    ).length,
-  };
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-5 sm:p-8">
@@ -123,18 +145,35 @@ export default function Panel({
         </div>
       </header>
 
-      {rows.length > 0 && (
+      {tiles.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Tile n={summary.active} label={t.summaryActive} tone="text-foreground" />
-          <Tile n={summary.waiting} label={t.summaryWaiting} tone="text-brand" />
-          <Tile n={summary.interviews} label={t.summaryInterviews} tone="text-warn" />
-          <Tile n={summary.due} label={t.summaryDue} tone={summary.due ? "text-warn" : "text-muted"} />
+          {tiles.map((tile) => (
+            <Tile
+              key={tile.key}
+              n={tile.n}
+              label={tile.label}
+              tone={tile.tone}
+              on={filter?.key === tile.key}
+              onClick={() => setPicked(filter?.key === tile.key ? null : tile.key)}
+            />
+          ))}
         </div>
       )}
 
       {/* Movil: titulo y boton arriba, buscador debajo a todo lo ancho. Ordenador: los tres en fila. */}
       <div className="mt-8 flex flex-wrap items-center gap-3">
-        <h2 className="order-1 text-lg font-medium">{t.yourApplications}</h2>
+        <h2 className="order-1 flex items-center gap-2 text-lg font-medium">
+          {t.yourApplications}
+          {filter && !showForm && (
+            <button
+              onClick={() => setPicked(null)}
+              aria-label={`${t.clearFilter}: ${filter.label}`}
+              className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand transition hover:bg-brand/20"
+            >
+              {filter.label} ✕
+            </button>
+          )}
+        </h2>
         {!showForm && rows.length > 0 && (
           <input
             type="search"
@@ -215,12 +254,31 @@ export default function Panel({
   );
 }
 
-function Tile({ n, label, tone }: { n: number; label: string; tone: string }) {
+function Tile({
+  n,
+  label,
+  tone,
+  on,
+  onClick,
+}: {
+  n: number;
+  label: string;
+  tone: string;
+  on: boolean;
+  onClick: () => void;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-surface px-4 py-3">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={`rounded-2xl border px-4 py-3 text-left transition ${
+        on ? "border-brand bg-brand-soft ring-1 ring-brand" : "border-border bg-surface hover:border-brand"
+      }`}
+    >
       <p className={`text-2xl font-semibold ${tone}`}>{n}</p>
       <p className="text-xs text-muted">{label}</p>
-    </div>
+    </button>
   );
 }
 
@@ -242,10 +300,9 @@ function Card({
   const [confirming, setConfirming] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
 
-  // Sin fecha guardada damos por supuestos 15 dias desde que aplicaste.
   // Negativo = ya deberias haber contactado.
   const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
-  const overdue = !r.followed_up && daysToFollowUp <= 0;
+  const overdue = isDue(r);
 
   return (
     <article
@@ -352,7 +409,7 @@ function Card({
         </div>
 
         <div className="flex items-center gap-3">
-          {!r.followed_up && (
+          {!r.followed_up && !CLOSED.includes(r.status) && (
             <span className={`text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
               {daysToFollowUp === 0
                 ? t.followUpToday
