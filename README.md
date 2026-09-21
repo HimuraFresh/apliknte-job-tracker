@@ -2,7 +2,7 @@
 
 *[Leer en español](#español)*
 
-A small web app to log job applications in seconds and always know which ones
+A web app to log job applications in seconds and always know which ones
 need a follow-up. It replaces the spreadsheet most of us end up with: three
 columns at first, an unreadable endless scroll two months later.
 
@@ -76,7 +76,7 @@ You need Node.js 20+ and a free Supabase project.
    npm run dev
    ```
 
-Date logic has a small test suite: `npm test`.
+Date logic is covered by automated tests: `npm test`.
 
 ## Roadmap
 
@@ -97,7 +97,7 @@ Feedback, issues and pull requests are very welcome.
 
 ## Español
 
-Una pequeña web para registrar candidaturas de empleo en segundos y saber
+Una aplicación web para registrar candidaturas de empleo en segundos y saber
 siempre a cuáles toca hacer seguimiento. Sustituye a la hoja de cálculo con la
 que casi todos acabamos: tres columnas al principio y un scroll infinito que
 nadie entiende a los dos meses.
