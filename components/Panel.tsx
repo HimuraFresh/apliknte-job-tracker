@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useLang, setLocale } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
@@ -249,7 +249,7 @@ function Card({
 
   return (
     <article
-      className={`relative rounded-2xl border bg-surface p-4 transition ${
+      className={`relative min-w-0 rounded-2xl border bg-surface p-4 transition ${
         overdue ? "border-warn/60" : "border-border hover:border-brand"
       } ${pending ? "opacity-60" : ""}`}
     >
@@ -389,6 +389,120 @@ const openPicker = (e: React.MouseEvent<HTMLInputElement>) => {
   } catch {}
 };
 
+// Fecha con icono propio: Safari en el movil no pone ninguno y Chrome pone el suyo,
+// asi que se oculta el nativo y se pinta el mismo en todas partes.
+function DateInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <span className="relative block">
+      <input
+        type="date"
+        onClick={openPicker}
+        {...props}
+        className="block w-full min-w-0 appearance-none rounded-xl border border-border bg-surface py-3 pl-4 pr-11 text-left text-foreground outline-none focus:border-brand [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left"
+      />
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="5" width="18" height="16" rx="3" />
+        <path d="M3 10h18M8 3v4M16 3v4" />
+      </svg>
+    </span>
+  );
+}
+
+// Campo con desplegable propio de lo que ya escribiste antes. Sustituye a las
+// sugerencias del navegador, que en el movil casi no se ven.
+function Suggest({
+  name,
+  placeholder,
+  defaultValue,
+  options,
+  className,
+}: {
+  name: string;
+  placeholder: string;
+  defaultValue: string;
+  options: string[];
+  className: string;
+}) {
+  const [value, setValue] = useState(defaultValue);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const listId = useId();
+
+  const q = norm(value.trim());
+  const matches = options.filter((o) => o !== value && norm(o).includes(q)).slice(0, 6);
+  const show = open && matches.length > 0;
+
+  const choose = (option: string) => {
+    setValue(option);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <input
+        name={name}
+        required
+        placeholder={placeholder}
+        value={value}
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={show}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        onChange={(e) => {
+          setValue(e.target.value);
+          setOpen(true);
+          setActive(0);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (!show) return;
+          if (e.key === "ArrowDown") setActive((active + 1) % matches.length);
+          else if (e.key === "ArrowUp") setActive((active - 1 + matches.length) % matches.length);
+          else if (e.key === "Enter") choose(matches[active]);
+          else if (e.key === "Escape") setOpen(false);
+          else return;
+          e.preventDefault();
+        }}
+        className={className}
+      />
+      {show && (
+        <ul
+          id={listId}
+          role="listbox"
+          className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-lg"
+        >
+          {matches.map((m, i) => (
+            <li key={m} role="option" aria-selected={i === active}>
+              <button
+                type="button"
+                // Sin esto el campo pierde el foco antes del clic y la lista se cierra.
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={() => choose(m)}
+                className={`w-full px-4 py-2.5 text-left text-sm transition ${
+                  i === active ? "bg-brand-soft text-brand" : "hover:bg-brand-soft"
+                }`}
+              >
+                {m}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // Mismo formulario para crear y para editar: cambia lo que se precarga y a donde se envia.
 function ApplicationForm({
   t,
@@ -422,7 +536,8 @@ function ApplicationForm({
     return { applied: hoy, follow: initial?.follow_up_on ?? plusDays(hoy, 15) };
   });
   const [cvId, setCvId] = useState(initial?.cv_version_id ?? null);
-  const [uploading, setUploading] = useState(false);
+  // Sin ningun CV todavia, el campo de subida se muestra directamente.
+  const [uploading, setUploading] = useState(cvs.length === 0);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvLabel, setCvLabel] = useState("");
   const [cvError, setCvError] = useState<string>();
@@ -447,6 +562,9 @@ function ApplicationForm({
     fd.set("cv_new_label", cvLabel.trim() || cvFile.name.replace(/\.pdf$/i, ""));
     return undefined;
   }
+
+  // Solo cuenta como "enviado" al editar y con un CV elegido que no se esta sustituyendo.
+  const sentCv = initial && !uploading && cvs.some((cv) => cv.id === cvId);
 
   function pickFile(file: File | undefined) {
     const problem = !file
@@ -475,33 +593,20 @@ function ApplicationForm({
         })
       }
     >
-      <input
+      <Suggest
         name="company"
-        required
         placeholder={t.company}
         defaultValue={initial?.company ?? ""}
-        list="companies"
+        options={companies}
         className={field}
       />
-      <datalist id="companies">
-        {companies.map((c) => (
-          <option key={c} value={c} />
-        ))}
-      </datalist>
-
-      <input
+      <Suggest
         name="role"
-        required
         placeholder={t.role}
         defaultValue={initial?.role ?? ""}
-        list="roles"
+        options={roles}
         className={field}
       />
-      <datalist id="roles">
-        {roles.map((r) => (
-          <option key={r} value={r} />
-        ))}
-      </datalist>
 
       <Chips
         name="work_mode"
@@ -573,30 +678,24 @@ function ApplicationForm({
         )}
       </fieldset>
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="grid gap-1 text-sm text-muted">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="grid min-w-0 gap-1 text-sm text-muted">
           {t.appliedOn}
-          <input
+          <DateInput
             name="applied_on"
-            type="date"
             value={dates.applied}
             onChange={(e) =>
               setDates({ applied: e.target.value, follow: plusDays(e.target.value, 15) })
             }
-            onClick={openPicker}
-            className={field}
           />
         </label>
 
-        <label className="grid gap-1 text-sm text-muted">
+        <label className="grid min-w-0 gap-1 text-sm text-muted">
           {t.followUpOn}
-          <input
+          <DateInput
             name="follow_up_on"
-            type="date"
             value={dates.follow}
             onChange={(e) => setDates({ ...dates, follow: e.target.value })}
-            onClick={openPicker}
-            className={field}
           />
         </label>
       </div>
@@ -604,25 +703,41 @@ function ApplicationForm({
       <p className="-mt-1 text-xs text-muted">{t.followUpHint}</p>
 
       <fieldset className="grid gap-2">
-        <legend className="text-sm text-muted">{t.cvSection}</legend>
-        <div className="flex flex-wrap gap-2">
-          {cvs.map((cv) => (
+        {/* Al editar una candidatura que ya lleva CV: "CV enviado" en verde. Si no, "Adjuntar". */}
+        <legend className={`text-sm ${sentCv ? "font-medium text-ok" : "text-muted"}`}>
+          {sentCv ? `✓ ${t.cvSent}` : t.cvAttach}
+        </legend>
+        {cvs.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {cvs.map((cv) => {
+              const on = !uploading && cvId === cv.id;
+              return (
+                <button
+                  key={cv.id}
+                  type="button"
+                  onClick={() => {
+                    setUploading(false);
+                    setCvId(cvId === cv.id ? null : cv.id);
+                  }}
+                  className={
+                    on
+                      ? "rounded-full border border-ok bg-ok/10 px-3 py-1.5 text-sm text-ok transition"
+                      : chip(false)
+                  }
+                >
+                  {on ? `✓ ${cv.label}` : cv.label}
+                </button>
+              );
+            })}
             <button
-              key={cv.id}
               type="button"
-              onClick={() => {
-                setUploading(false);
-                setCvId(cvId === cv.id ? null : cv.id);
-              }}
-              className={chip(!uploading && cvId === cv.id)}
+              onClick={() => setUploading(!uploading)}
+              className={chip(uploading)}
             >
-              {cv.label}
+              {t.cvUploadNew}
             </button>
-          ))}
-          <button type="button" onClick={() => setUploading(!uploading)} className={chip(uploading)}>
-            {t.cvUploadNew}
-          </button>
-        </div>
+          </div>
+        )}
         {uploading && (
           <div className="grid gap-2 sm:grid-cols-2">
             {/* Sin name: el archivo no viaja en el formulario, lo sube attachCv */}
