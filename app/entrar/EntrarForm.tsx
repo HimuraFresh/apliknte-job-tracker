@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { signIn, signUp, requestPasswordReset } from "./actions";
 import { useLang, setLocale } from "@/lib/lang";
 import Logo from "@/components/Logo";
+import Flag from "@/components/Flag";
 import PasswordField from "@/components/PasswordField";
 import { passwordOk } from "@/lib/password";
 
@@ -44,10 +45,12 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
               <button
                 key={l}
                 onClick={() => l !== locale && setLocale(l)}
-                className={`px-2.5 py-1.5 transition ${
-                  l === locale ? "bg-brand text-white" : "text-muted hover:text-foreground"
+                aria-pressed={l === locale}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 transition ${
+                  l === locale ? "bg-brand text-on-solid" : "text-muted hover:text-foreground"
                 }`}
               >
+                <Flag code={l} />
                 {l.toUpperCase()}
               </button>
             ))}
@@ -91,7 +94,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
           )}
           <button
             disabled={pending || blocked}
-            className="rounded-xl bg-brand px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-brand px-4 py-3 font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
           >
             {mode === "in" ? t.signIn : mode === "up" ? t.signUp : t.sendResetLink}
           </button>
@@ -123,7 +126,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             <button
               type="button"
               onClick={() => setMode("reset")}
-              className="w-fit rounded-lg bg-brand px-3 py-1.5 font-medium text-white transition hover:opacity-90"
+              className="w-fit rounded-lg bg-brand px-3 py-1.5 font-medium text-on-solid transition hover:opacity-90"
             >
               {t.recoverPassword}
             </button>

@@ -70,7 +70,7 @@ export default function SuggestionPanel({ onClose }: { onClose: () => void }) {
       <div className="flex gap-3">
         <button
           disabled={pending || !message.trim()}
-          className="flex-1 rounded-xl bg-brand px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          className="flex-1 rounded-xl bg-brand px-4 py-3 font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
         >
           {t.suggestSend}
         </button>

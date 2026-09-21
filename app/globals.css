@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Siempre clara, blanco y azul: se ignora el modo oscuro del sistema a proposito. */
+/* Tema claro por defecto; el oscuro se elige en el menu y se guarda en la cookie "theme". */
 :root {
-  color-scheme: light; /* calendarios y controles nativos tambien en claro */
+  color-scheme: light; /* calendarios y controles nativos a juego con el tema */
   --background: #f5f8fc;
   --surface: #ffffff;
   --foreground: #0f172a;
@@ -12,9 +12,30 @@
   --brand-strong: #1d4ed8; /* el nombre "Apliknte" */
   --brand-soft: #eff6ff;
   --accent: #38bdf8; /* el punto de "Apliknte." */
-  --ok: #16a34a;
-  --warn: #d97706;
+  --on-solid: #ffffff; /* texto sobre fondos de color solido (botones, "Contratado") */
+  /* verde y ambar oscurecidos para que el texto pequeno se lea bien sobre blanco */
+  --ok: #15803d;
+  --warn: #b45309;
   --bad: #dc2626;
+}
+
+/* Oscuro: morado sobre casi negro, como la primera version de la app. Los colores se
+   aclaran para leerse sobre fondo oscuro, y el texto de los botones pasa a oscuro. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #0b0d12;
+  --surface: #151821;
+  --foreground: #eceef5;
+  --muted: #99a0b0;
+  --border: #262b38;
+  --brand: #8b8bf0;
+  --brand-strong: #c7c7fb; /* "Apliknte" en lila claro: se lee y no choca con la carpeta azul */
+  --brand-soft: #23233a;
+  --accent: #38bdf8;
+  --on-solid: #0b0d12;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
 }
 
 @theme inline {
@@ -27,6 +48,7 @@
   --color-brand-strong: var(--brand-strong);
   --color-brand-soft: var(--brand-soft);
   --color-accent: var(--accent);
+  --color-on-solid: var(--on-solid);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-bad: var(--bad);

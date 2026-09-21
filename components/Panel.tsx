@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, useTransition } from "react";
-import { useLang, setLocale } from "@/lib/lang";
+import { useLang } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
 import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
@@ -12,9 +12,9 @@ import {
   setFollowedUp,
   setStatus,
 } from "@/app/panel/actions";
-import { signOut } from "@/app/entrar/actions";
 import Logo from "@/components/Logo";
 import SuggestionPanel from "@/components/SuggestionPanel";
+import AppMenu from "@/components/AppMenu";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export type Application = {
@@ -53,7 +53,7 @@ const STATUS_TONE: Record<string, string> = {
   entrevista_2: "bg-warn/20 text-warn",
   entrevista_3: "bg-warn/30 text-warn",
   oferta: "bg-ok/20 text-ok",
-  contratado: "bg-ok text-white",
+  contratado: "bg-ok text-on-solid",
   rechazado: "bg-bad/15 text-bad",
   retirado: "bg-muted/20 text-muted",
 };
@@ -132,26 +132,7 @@ export default function Panel({
             {rows.length} {rows.length === 1 ? t.totalOne : t.total}
           </p>
         </div>
-        <div className="flex items-center gap-3 text-sm text-muted">
-          <button
-            onClick={() => setLocale(locale === "es" ? "en" : "es")}
-            className="transition hover:text-foreground"
-          >
-            {locale === "es" ? "EN" : "ES"}
-          </button>
-          <button
-            onClick={() => setSuggestOpen(!suggestOpen)}
-            aria-expanded={suggestOpen}
-            className="rounded-full bg-brand-soft px-3 py-1 text-brand transition hover:bg-brand/20"
-          >
-            {t.suggestions}
-          </button>
-          <form action={signOut}>
-            <button className="rounded-full bg-bad/10 px-3 py-1 text-bad transition hover:bg-bad/20">
-              {t.signOut}
-            </button>
-          </form>
-        </div>
+        <AppMenu onSuggest={() => setSuggestOpen(true)} />
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}
@@ -200,7 +181,7 @@ export default function Panel({
             setEditing(null);
             setOpen(!open);
           }}
-          className="order-2 ml-auto shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 sm:order-3 sm:ml-0"
+          className="order-2 ml-auto shrink-0 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-on-solid transition hover:opacity-90 sm:order-3 sm:ml-0"
         >
           {showForm ? t.cancel : `+ ${t.newApplication}`}
         </button>
@@ -403,7 +384,7 @@ function Card({
             type="button"
             onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
             className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
-              r.followed_up ? "bg-ok text-white" : "border border-border text-muted"
+              r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
             }`}
           >
             {r.followed_up ? `✓ ${t.yes}` : t.yes}
@@ -839,7 +820,7 @@ function ApplicationForm({
       <div className="flex gap-3">
         <button
           disabled={pending}
-          className="flex-1 rounded-xl bg-brand px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          className="flex-1 rounded-xl bg-brand px-4 py-3 font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
         >
           {t.save}
         </button>

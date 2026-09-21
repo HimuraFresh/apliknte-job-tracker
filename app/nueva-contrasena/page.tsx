@@ -26,7 +26,7 @@ export default function NuevaContrasenaPage() {
           />
           <button
             disabled={pending || !passwordOk(password)}
-            className="rounded-xl bg-brand px-4 py-3 font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-brand px-4 py-3 font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
           >
             {t.savePassword}
           </button>
