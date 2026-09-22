@@ -7,6 +7,25 @@ import Logo from "@/components/Logo";
 import Flag from "@/components/Flag";
 import PasswordField from "@/components/PasswordField";
 import { passwordOk } from "@/lib/password";
+import type { Dict } from "@/lib/dict";
+
+// Bandejas mas comunes: tras "revisa tu correo", un enlace para abrirla de un toque.
+const INBOXES: Record<string, { name: string; url: string }> = {
+  "gmail.com": { name: "Gmail", url: "https://mail.google.com" },
+  "googlemail.com": { name: "Gmail", url: "https://mail.google.com" },
+  "outlook.com": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "outlook.es": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "hotmail.com": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "hotmail.es": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "live.com": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "msn.com": { name: "Outlook", url: "https://outlook.live.com/mail" },
+  "yahoo.com": { name: "Yahoo", url: "https://mail.yahoo.com" },
+  "yahoo.es": { name: "Yahoo", url: "https://mail.yahoo.com" },
+  "icloud.com": { name: "iCloud", url: "https://www.icloud.com/mail" },
+  "me.com": { name: "iCloud", url: "https://www.icloud.com/mail" },
+  "proton.me": { name: "Proton", url: "https://mail.proton.me" },
+  "protonmail.com": { name: "Proton", url: "https://mail.proton.me" },
+};
 
 export default function EntrarForm({ linkError }: { linkError: boolean }) {
   const { t, locale } = useLang();
@@ -138,12 +157,34 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
           state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>
         )}
         {state.message === "checkEmail" && (
-          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.checkEmail}</p>
+          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
+            {t.checkEmail}
+            <Inbox email={email} t={t} />
+          </p>
         )}
         {state.message === "resetSent" && (
-          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.resetSent}</p>
+          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
+            {t.resetSent}
+            <Inbox email={email} t={t} />
+          </p>
         )}
       </div>
     </main>
+  );
+}
+
+// Enlace a la bandeja de entrada, solo si reconocemos el correo (Gmail, Outlook...).
+function Inbox({ email, t }: { email: string; t: Dict }) {
+  const inbox = INBOXES[email.split("@")[1]?.trim().toLowerCase() ?? ""];
+  if (!inbox) return null;
+  return (
+    <a
+      href={inbox.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 block font-medium underline"
+    >
+      {t.openInbox(inbox.name)} ↗
+    </a>
   );
 }

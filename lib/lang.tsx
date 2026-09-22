@@ -17,8 +17,17 @@ export function LangProvider({
 
 export const useLang = () => useContext(Ctx);
 
-export function setLocale(next: Locale) {
+export async function setLocale(next: Locale) {
   document.cookie = `locale=${next}; path=/; max-age=31536000`;
+  // Se guarda tambien en la cuenta para que los correos (confirmar, recuperar contrasena)
+  // lleguen en el ultimo idioma elegido. Si no hay sesion, falla y da igual.
+  try {
+    const { supabaseBrowser } = await import("./supabase/client");
+    await Promise.race([
+      supabaseBrowser().auth.updateUser({ data: { locale: next } }),
+      new Promise((done) => setTimeout(done, 1500)),
+    ]);
+  } catch {}
   location.reload();
 }
 

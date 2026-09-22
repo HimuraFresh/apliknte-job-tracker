@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -30,8 +30,12 @@ export async function signUp(_prev: State, formData: FormData): Promise<State> {
   const { data, error } = await supabase.auth.signUp({
     email: String(formData.get("email")),
     password: String(formData.get("password")),
-    // El enlace del correo de confirmacion vuelve aqui y deja la sesion iniciada.
-    options: { emailRedirectTo: `${origin}/auth/callback` },
+    // El enlace del correo de confirmacion vuelve aqui y deja la sesion iniciada. El idioma
+    // se guarda en la cuenta: las plantillas de correo de Supabase eligen con el.
+    options: {
+      emailRedirectTo: `${origin}/auth/callback`,
+      data: { locale: (await cookies()).get("locale")?.value === "en" ? "en" : "es" },
+    },
   });
   if (error) return fail(error);
   // Con "Confirm email" activado, Supabase no da error si el correo ya existe (para no
