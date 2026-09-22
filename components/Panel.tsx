@@ -105,6 +105,8 @@ export default function Panel({
   const [warning, setWarning] = useState<string>();
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [cvsOpen, setCvsOpen] = useState(false);
+  // La candidatura abierta: dentro de su ficha en el movil, en el panel derecho en el ordenador.
+  const [openId, setOpenId] = useState<string | null>(null);
   const showForm = open || editing !== null;
 
   // Los recuadros a 0 no se muestran. Si el filtro elegido se queda a 0, se ven todas.
@@ -182,13 +184,14 @@ export default function Panel({
     })),
   ];
   const cvLabels = new Map(cvs.map((cv) => [cv.id, cv.label]));
+  const selected = visible.find((r) => r.id === openId);
 
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
 
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 p-5 sm:p-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 p-5 sm:p-8 lg:max-w-5xl">
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl">
@@ -371,8 +374,11 @@ export default function Panel({
         </div>
       )}
 
+      {/* Ordenador: lista a la izquierda y la ficha elegida fija a la derecha. Movil: solo
+          la lista, y los detalles se abren dentro de la propia ficha. */}
       {!showForm && (
-        <section className="mt-4 grid gap-3">
+        <div className="mt-4 lg:flex lg:items-start lg:gap-4">
+        <section className="grid gap-3 lg:min-w-0 lg:flex-1">
           {rows.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
               {t.empty}
@@ -393,6 +399,8 @@ export default function Panel({
                   t={t}
                   locale={locale}
                   cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
+                  open={openId === r.id}
+                  onToggle={() => setOpenId(openId === r.id ? null : r.id)}
                   onEdit={() => {
                     setWarning(undefined);
                     setEditing(r);
@@ -412,6 +420,41 @@ export default function Panel({
                 />
               ))}
         </section>
+
+        {view === "list" && rows.length > 0 && (
+          <aside className="sticky top-6 hidden w-[22rem] shrink-0 lg:block">
+            {selected ? (
+              <div className="rounded-2xl border border-border bg-surface p-4">
+                <h2 className="font-medium">{selected.role}</h2>
+                <p className="break-words text-sm text-muted">
+                  {selected.company}{" "}
+                  <span className="whitespace-nowrap">
+                    · {t.daysAgo(daysSince(selected.applied_on))}
+                  </span>
+                </p>
+                <div className="mt-3 border-t border-border pt-3">
+                  <Details
+                    r={selected}
+                    t={t}
+                    locale={locale}
+                    cvLabel={
+                      selected.cv_version_id ? cvLabels.get(selected.cv_version_id) : undefined
+                    }
+                    onEdit={() => {
+                      setWarning(undefined);
+                      setEditing(selected);
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
+                {t.pickOne}
+              </p>
+            )}
+          </aside>
+        )}
+        </div>
       )}
     </main>
   );
@@ -477,41 +520,38 @@ function Card({
   t,
   locale,
   cvLabel,
+  open,
+  onToggle,
   onEdit,
 }: {
   r: Application;
   t: Dict;
   locale: string;
   cvLabel?: string;
+  open: boolean;
+  onToggle: () => void;
   onEdit: () => void;
 }) {
   const [pending, start] = useTransition();
-  const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState(false);
-  const [confirming, setConfirming] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
 
   // Negativo = ya deberias haber contactado.
   const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
   const overdue = isDue(r);
-  const salary =
-    r.salary_min || r.salary_max
-      ? `${money(r.salary_min, locale)}${r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}`
-      : null;
-  const hasDetails = r.work_mode || r.source || salary || r.url || cvLabel;
 
   return (
     <article
       className={`relative min-w-0 rounded-2xl border bg-surface p-4 transition ${
         overdue ? "border-warn/60" : "border-border hover:border-brand"
-      } ${pending ? "opacity-60" : ""}`}
+      } ${open ? "ring-1 ring-brand" : ""} ${pending ? "opacity-60" : ""}`}
     >
       {/* Cerrada, solo lo esencial y el aviso de seguimiento. La cabecera abre los detalles
           (solo para verlos: para cambiarlos esta Editar). El estado se cambia aparte. */}
       <div className="flex items-start justify-between gap-3">
         <button
           type="button"
-          onClick={() => setOpen(!open)}
+          onClick={onToggle}
           aria-expanded={open}
           className="min-w-0 flex-1 text-left"
         >
@@ -568,7 +608,7 @@ function Card({
             type="button"
             tabIndex={-1}
             aria-hidden="true"
-            onClick={() => setOpen(!open)}
+            onClick={onToggle}
             className="tap p-1 text-muted transition hover:text-foreground"
           >
             <svg
@@ -586,8 +626,46 @@ function Card({
         </div>
       </div>
 
+      {/* En el movil los detalles se abren aqui; en el ordenador van al panel de la derecha */}
       {open && (
-        <div className="mt-3 grid gap-4 border-t border-border pt-3">
+        <div className="mt-3 border-t border-border pt-3 lg:hidden">
+          <Details r={r} t={t} locale={locale} cvLabel={cvLabel} onEdit={onEdit} />
+        </div>
+      )}
+    </article>
+  );
+}
+
+// Los detalles de una candidatura, sin su cabecera: dentro de la ficha en el movil y en
+// el panel fijo de la derecha en el ordenador.
+function Details({
+  r,
+  t,
+  locale,
+  cvLabel,
+  onEdit,
+}: {
+  r: Application;
+  t: Dict;
+  locale: string;
+  cvLabel?: string;
+  onEdit: () => void;
+}) {
+  const [pending, start] = useTransition();
+  const [confirming, setConfirming] = useState(false);
+  const run = (fn: () => Promise<unknown>) => start(() => void fn());
+
+  const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
+  const overdue = isDue(r);
+  const salary =
+    r.salary_min || r.salary_max
+      ? `${money(r.salary_min, locale)}${r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}`
+      : null;
+  const hasDetails = r.work_mode || r.source || salary || r.url || cvLabel;
+
+  return (
+    <>
+      <div className={`grid gap-4 ${pending ? "opacity-60" : ""}`}>
           {hasDetails && (
             <div className="grid grid-cols-2 gap-x-5">
               <dl className="grid content-start gap-3">
@@ -679,9 +757,8 @@ function Card({
               </button>
             </div>
           </div>
-        </div>
-      )}
-    </article>
+      </div>
+    </>
   );
 }
 
