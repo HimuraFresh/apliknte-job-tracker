@@ -8,18 +8,21 @@ import Flag from "@/components/Flag";
 import PasswordField from "@/components/PasswordField";
 import { passwordOk } from "@/lib/password";
 
-const ACTIONS = { in: signIn, up: signUp, reset: requestPasswordReset };
-
 export default function EntrarForm({ linkError }: { linkError: boolean }) {
   const { t, locale } = useLang();
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [state, action, pending] = useActionState(ACTIONS[mode], {});
-  // Los mensajes son del modo en que se envio el formulario: al cambiar de modo desaparecen.
-  const [sentFrom, setSentFrom] = useState(mode);
-  const current = sentFrom === mode;
-  const exists = current && ["user_already_exists", "email_exists"].includes(state.error ?? "");
+  // Un useActionState por pestaña, cada uno con su accion fija. Con uno solo cambiando de
+  // accion, React no se entera al volver a la primera: tras pasar por "Crear cuenta",
+  // "Entrar" seguia registrando. De paso, cada pestaña guarda sus propios mensajes.
+  const forms = {
+    in: useActionState(signIn, {}),
+    up: useActionState(signUp, {}),
+    reset: useActionState(requestPasswordReset, {}),
+  };
+  const [state, action, pending] = forms[mode];
+  const exists = ["user_already_exists", "email_exists"].includes(state.error ?? "");
   // Al crear cuenta no se envia nada hasta cumplir los requisitos: no gasta intentos ni correos.
   const blocked = mode === "up" && !passwordOk(password);
 
@@ -73,7 +76,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
           </div>
         )}
 
-        <form action={action} onSubmit={() => setSentFrom(mode)} className="mt-4 grid gap-3">
+        <form action={action} className="mt-4 grid gap-3">
           <input
             name="email"
             type="email"
@@ -132,13 +135,12 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             </button>
           </div>
         ) : (
-          current &&
           state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>
         )}
-        {current && state.message === "checkEmail" && (
+        {state.message === "checkEmail" && (
           <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.checkEmail}</p>
         )}
-        {current && state.message === "resetSent" && (
+        {state.message === "resetSent" && (
           <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">{t.resetSent}</p>
         )}
       </div>
