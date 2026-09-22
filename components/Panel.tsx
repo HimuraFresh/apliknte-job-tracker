@@ -78,6 +78,8 @@ const FILTERS = {
 };
 type Filter = keyof typeof FILTERS;
 
+type Option = { id: string; label: string; match: (r: Application) => boolean };
+
 export default function Panel({
   rows,
   cvs,
@@ -92,6 +94,8 @@ export default function Panel({
   const [editing, setEditing] = useState<Application | null>(null);
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<Filter | null>(null);
+  const [chosen, setChosen] = useState<Record<string, string>>({});
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [warning, setWarning] = useState<string>();
   const [suggestOpen, setSuggestOpen] = useState(false);
   const showForm = open || editing !== null;
@@ -109,12 +113,57 @@ export default function Panel({
     .filter((tile) => tile.n > 0);
   const filter = tiles.find((tile) => tile.key === picked);
 
+  // Filtros extra. Como en los recuadros, cada opcion cuenta y filtra con la misma
+  // regla, y las que se quedan a 0 no se muestran.
+  const facets = (
+    [
+      {
+        key: "mode",
+        label: t.workMode,
+        options: WORK_MODES.map((m) => ({ id: m, label: t[m], match: (r) => r.work_mode === m })),
+      },
+      {
+        key: "source",
+        label: t.source,
+        options: SOURCES.map((s) => ({ id: s, label: s, match: (r) => r.source === s })),
+      },
+      {
+        key: "date",
+        label: t.appliedOn,
+        options: [7, 30, 90].map((d) => ({
+          id: String(d),
+          label: t.lastDays(d),
+          match: (r) => daysSince(r.applied_on) <= d,
+        })),
+      },
+    ] satisfies { key: string; label: string; options: Option[] }[]
+  ).map((f) => ({
+    ...f,
+    options: f.options
+      .map((o: Option) => ({ ...o, n: rows.filter(o.match).length }))
+      .filter((o) => o.n > 0),
+  }));
+  const active = facets.flatMap((f) =>
+    f.options.filter((o) => chosen[f.key] === o.id).map((o) => ({ ...o, facet: f.key })),
+  );
+
   const q = norm(query.trim());
   const visible = rows.filter(
     (r) =>
       (!filter || FILTERS[filter.key](r)) &&
+      active.every((o) => o.match(r)) &&
       (!q || norm(`${r.company} ${r.role}`).includes(q)),
   );
+
+  // Todo lo que esta filtrando ahora mismo, cada cosa con su ✕ para quitarla.
+  const pills = [
+    ...(filter ? [{ key: "tile", label: filter.label, clear: () => setPicked(null) }] : []),
+    ...active.map((o) => ({
+      key: o.facet,
+      label: o.label,
+      clear: () => setChosen({ ...chosen, [o.facet]: "" }),
+    })),
+  ];
   const cvLabels = new Map(cvs.map((cv) => [cv.id, cv.label]));
 
   const companies = [...new Set(rows.map((r) => r.company))];
@@ -154,27 +203,31 @@ export default function Panel({
 
       {/* Movil: titulo y boton arriba, buscador debajo a todo lo ancho. Ordenador: los tres en fila. */}
       <div className="mt-8 flex flex-wrap items-center gap-3">
-        <h2 className="order-1 flex items-center gap-2 text-lg font-medium">
-          {t.yourApplications}
-          {filter && !showForm && (
-            <button
-              onClick={() => setPicked(null)}
-              aria-label={`${t.clearFilter}: ${filter.label}`}
-              className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand transition hover:bg-brand/20"
-            >
-              {filter.label} ✕
-            </button>
-          )}
-        </h2>
+        <h2 className="order-1 text-lg font-medium">{t.yourApplications}</h2>
         {!showForm && rows.length > 0 && (
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.search}
-            aria-label={t.search}
-            className="order-3 w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-brand sm:order-2 sm:w-auto sm:flex-1"
-          />
+          <div className="order-3 flex w-full gap-2 sm:order-2 sm:w-auto sm:flex-1">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t.search}
+              aria-label={t.search}
+              className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-brand"
+            />
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+              aria-expanded={filtersOpen}
+              className={`shrink-0 rounded-xl border px-4 py-2.5 text-sm transition ${
+                filtersOpen || active.length > 0
+                  ? "border-brand text-brand"
+                  : "border-border text-muted hover:text-foreground"
+              }`}
+            >
+              {t.filters}
+              {active.length > 0 && ` · ${active.length}`}
+            </button>
+          </div>
         )}
         <button
           onClick={() => {
@@ -186,6 +239,50 @@ export default function Panel({
           {showForm ? t.cancel : `+ ${t.newApplication}`}
         </button>
       </div>
+
+      {!showForm && filtersOpen && rows.length > 0 && (
+        <div className="mt-3 grid max-w-3xl gap-4 rounded-2xl border border-border bg-surface p-4">
+          {facets
+            .filter((f) => f.options.length > 0)
+            .map((f) => (
+              <fieldset key={f.key} className="grid gap-2">
+                <legend className="text-sm text-muted">{f.label}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {f.options.map((o) => {
+                    const on = chosen[f.key] === o.id;
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setChosen({ ...chosen, [f.key]: on ? "" : o.id })}
+                        className={chip(on)}
+                      >
+                        {o.label} <span className="opacity-60">{o.n}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
+        </div>
+      )}
+
+      {!showForm && pills.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {pills.map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={p.clear}
+              aria-label={`${t.clearFilter}: ${p.label}`}
+              className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand transition hover:bg-brand/20"
+            >
+              {p.label} ✕
+            </button>
+          ))}
+        </div>
+      )}
 
       {showForm && (
         <ApplicationForm
@@ -221,9 +318,9 @@ export default function Panel({
             </p>
           )}
 
-          {q && visible.length === 0 && (
+          {rows.length > 0 && visible.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-              {t.noResults(query.trim())}
+              {q ? t.noResults(query.trim()) : t.noMatches}
             </p>
           )}
 
