@@ -9,17 +9,23 @@ columns at first, an unreadable endless scroll two months later.
 ## What it does
 
 - **Log an application in ~20 seconds.** Company and role autocomplete from
-  what you've typed before; work mode, status and source are one-tap buttons.
+  what you've typed before (plus ~450 companies that hire in Spain); work
+  mode, status and source are one-tap buttons.
 - **Follow-up reminders.** A follow-up date is suggested 15 days after you
   apply (and assigned automatically if you skip it). Cards turn amber when
   it's overdue, until you mark it as done.
+- **Compact cards.** Each card shows the essentials; tap it to see the
+  details, the CV you sent and your notes (red flags, the recruiter's name…).
 - **Status from the card.** Tap the status badge to move an application
   forward: no reply → they reached out → 1st/2nd/3rd interview → offer →
   hired, or rejected / withdrew.
-- **Summary at a glance.** Active, waiting for a reply, interviewing, and
-  follow-ups due.
+- **Find anything.** Search by company or role, filter by work mode, source
+  or date, or view by company or by role. The summary tiles (active, waiting,
+  interviewing, follow-ups due) filter too.
+- **CVs as PDF**, tagged by type ("Data CV", "ATS CV"…), so you know which one
+  you sent where.
 - **Edit and delete**, with a two-tap confirmation for deleting.
-- **Spanish and English**, switchable at any time.
+- **Spanish and English, light and dark mode.**
 - **Accounts** with email and password, including password reset.
 
 ## Stack
@@ -41,9 +47,9 @@ using a few plugins that change how the model works:
   a structured interview before writing any code, to pin down what the tool
   actually had to solve.
 - **[ponytail](https://github.com/DietrichGebert/ponytail)**: pushes towards
-  the simplest solution that works. Several planned features were dropped
-  because of it (a one-off importer, a pre-loaded list of 1,000 companies, an
-  ad slot with no advertisers).
+  the simplest solution that works. Several planned features were dropped or
+  trimmed because of it: a one-off importer, an ad slot with no advertisers,
+  and a list of 1,000 companies that ended up as ~450 suggestions.
 - **[graphify](https://github.com/Graphify-Labs/graphify)** and
   **[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)**:
   installed for the upcoming phases (code map and visual design).
@@ -62,8 +68,8 @@ You need Node.js 20+ and a free Supabase project.
    npm install
    ```
 2. In your Supabase project, open **SQL Editor** and run
-   [`supabase/schema.sql`](supabase/schema.sql). It creates the tables and the
-   row-level security policies.
+   [`supabase/schema.sql`](supabase/schema.sql). It creates the tables, the CV
+   storage and the row-level security policies.
 3. Copy `.env.example` to `.env.local` and fill in your project URL and
    publishable (anon) key, from **Project Settings → API Keys**:
    ```
@@ -76,16 +82,17 @@ You need Node.js 20+ and a free Supabase project.
    npm run dev
    ```
 
-Date logic is covered by automated tests: `npm test`.
+Dates, password rules and grouping are covered by automated tests: `npm test`.
 
 ## Roadmap
 
 - [x] Accounts, quick entry, status and follow-up from the card, edit/delete, summary
 - [x] Public deployment
-- [ ] Search, filters, and grouping by company and by role
-- [ ] Upload CVs as PDF and tag which one you sent
+- [x] Search, filters, and grouping by company and by role
+- [x] Upload CVs as PDF and tag which one you sent
+- [x] Expandable cards and notes
 - [ ] Visual polish and installable mobile app (PWA)
-- [ ] CSV export
+- [ ] CSV import and export
 
 Feedback, issues and pull requests are very welcome.
 
@@ -107,16 +114,23 @@ nadie entiende a los dos meses.
 ### Qué hace
 
 - **Registrar una candidatura en unos 20 segundos.** Empresa y puesto se
-  autocompletan con lo que ya escribiste; modalidad, estado y vía son botones.
+  autocompletan con lo que ya escribiste (y con unas 450 empresas que
+  contratan en España); modalidad, estado y vía son botones.
 - **Avisos de seguimiento.** Propone una fecha a 15 días de la aplicación (y
   la asigna sola si no eliges ninguna). La ficha se pone en ámbar cuando se
   pasa la fecha, hasta que marcas que ya contactaste.
+- **Fichas compactas.** Cada ficha enseña lo esencial; al tocarla ves los
+  detalles, el CV que enviaste y tus notas (red flags, el nombre del recruiter…).
 - **Estado desde la propia ficha**: sin respuesta → me contactaron → 1ª, 2ª,
   3ª entrevista → oferta recibida → contratado, o rechazado / me retiré.
-- **Resumen de un vistazo**: en marcha, sin respuesta, en entrevistas y
-  seguimientos pendientes.
+- **Encuentra cualquier candidatura.** Busca por empresa o puesto, filtra por
+  modalidad, vía o fecha, o míralas por empresa o por puesto. Los recuadros del
+  resumen (en marcha, sin respuesta, en entrevistas, toca contactar) también
+  filtran.
+- **CVs en PDF** con su tipo ("CV Data", "CV ATS"…), para saber cuál enviaste
+  a cada sitio.
 - **Editar y borrar**, con confirmación en dos toques para borrar.
-- **Español e inglés**, se cambia en cualquier momento.
+- **Español e inglés, modo claro y oscuro.**
 - **Cuentas** con correo y contraseña, incluida la recuperación.
 
 ### Tecnologías
@@ -139,9 +153,10 @@ usando varios plugins que cambian la forma de trabajar del modelo:
   una entrevista estructurada antes de escribir código, para concretar qué
   problema tenía que resolver de verdad la herramienta.
 - **[ponytail](https://github.com/DietrichGebert/ponytail)**: empuja hacia la
-  solución más simple que funcione. Por eso se descartaron varias funciones
-  previstas (un importador de un solo uso, una lista precargada de 1.000
-  empresas y un espacio publicitario sin anunciantes).
+  solución más simple que funcione. Por eso se descartaron o recortaron varias
+  funciones previstas: un importador de un solo uso, un espacio publicitario
+  sin anunciantes y una lista de 1.000 empresas que se quedó en unas 450
+  sugerencias.
 - **[graphify](https://github.com/Graphify-Labs/graphify)** y
   **[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)**:
   instalados para las próximas fases (mapa del código y diseño visual).
@@ -160,8 +175,8 @@ Necesitas Node.js 20 o superior y un proyecto gratuito de Supabase.
    npm install
    ```
 2. En tu proyecto de Supabase, abre **SQL Editor** y ejecuta
-   [`supabase/schema.sql`](supabase/schema.sql). Crea las tablas y las reglas
-   de seguridad a nivel de fila.
+   [`supabase/schema.sql`](supabase/schema.sql). Crea las tablas, el almacén
+   de CVs y las reglas de seguridad a nivel de fila.
 3. Copia `.env.example` como `.env.local` y rellena la URL del proyecto y la
    clave publishable (anon), que están en **Project Settings → API Keys**:
    ```
@@ -174,16 +189,18 @@ Necesitas Node.js 20 o superior y un proyecto gratuito de Supabase.
    npm run dev
    ```
 
-La lógica de fechas está cubierta por tests automáticos: `npm test`.
+Las fechas, las reglas de contraseña y la agrupación están cubiertas por
+tests automáticos: `npm test`.
 
 ### Hoja de ruta
 
 - [x] Cuentas, alta rápida, estado y seguimiento desde la ficha, editar y borrar, resumen
 - [x] Despliegue público
-- [ ] Buscador, filtros y agrupación por empresa y por puesto
-- [ ] Subir CVs en PDF y marcar cuál enviaste
+- [x] Buscador, filtros y agrupación por empresa y por puesto
+- [x] Subir CVs en PDF y marcar cuál enviaste
+- [x] Fichas desplegables y notas
 - [ ] Pulido visual y app instalable en el móvil (PWA)
-- [ ] Exportar a CSV
+- [ ] Importar y exportar CSV
 
 Cualquier crítica, sugerencia, issue o pull request es bienvenida.
 
