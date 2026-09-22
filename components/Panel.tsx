@@ -962,6 +962,7 @@ function ApplicationForm({
 
       <fieldset className="grid gap-2">
         <legend className="text-sm text-muted">{t.salary}</legend>
+        <p className="-mt-1 text-xs text-muted/80">{t.salaryHint}</p>
         <button
           type="button"
           onClick={() => setNoSalary(!noSalary)}
