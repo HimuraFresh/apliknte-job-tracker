@@ -114,8 +114,8 @@ export default function Panel({
     .filter((tile) => tile.n > 0);
   const filter = tiles.find((tile) => tile.key === picked);
 
-  // Filtros extra. Como en los recuadros, cada opcion cuenta y filtra con la misma
-  // regla, y las que se quedan a 0 no se muestran.
+  // Filtros extra. Como en los recuadros, la misma regla sirve para filtrar y para
+  // contar, y las opciones que se quedan a 0 no se muestran.
   const facets = (
     [
       {
@@ -269,7 +269,7 @@ export default function Panel({
                         onClick={() => setChosen({ ...chosen, [f.key]: on ? "" : o.id })}
                         className={chip(on)}
                       >
-                        {o.label} <span className="opacity-60">{o.n}</span>
+                        {o.label}
                       </button>
                     );
                   })}
@@ -280,7 +280,7 @@ export default function Panel({
       )}
 
       {!showForm && rows.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex max-w-3xl flex-wrap items-center gap-2">
           <div className="flex rounded-xl bg-brand-soft/60 p-1">
             {(
               [
@@ -313,6 +313,10 @@ export default function Panel({
               {p.label} ✕
             </button>
           ))}
+          {/* Cuantas quedan con la busqueda y los filtros de ahora */}
+          {visible.length !== rows.length && (
+            <span className="ml-auto text-xs text-muted">{t.shown(visible.length, rows.length)}</span>
+          )}
         </div>
       )}
 
