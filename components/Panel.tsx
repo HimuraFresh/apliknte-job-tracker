@@ -40,10 +40,11 @@ export type Cv = { id: string; label: string };
 
 const MAX_CV_BYTES = 5 * 1024 * 1024;
 
-// Aspecto comun de los botones tipo "globito" que se marcan y desmarcan.
-const chip = (on: boolean) =>
+// Aspecto comun de los botones tipo "globito" que se marcan y desmarcan. En los filtros,
+// la palabra elegida va en el color de texto principal (blanco en oscuro) para que resalte.
+const chip = (on: boolean, onText = "text-brand") =>
   `rounded-full border px-3 py-1.5 text-sm transition ${
-    on ? "border-brand bg-brand-soft text-brand" : "border-border text-muted hover:text-foreground"
+    on ? `border-brand bg-brand-soft ${onText}` : "border-border text-muted hover:text-foreground"
   }`;
 
 const STATUS_TONE: Record<string, string> = {
@@ -96,6 +97,7 @@ export default function Panel({
   const [picked, setPicked] = useState<Filter | null>(null);
   const [chosen, setChosen] = useState<Record<string, string>>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersId = useId();
   const [view, setView] = useState<"list" | "company" | "role">("list");
   // Al tocar una empresa o un puesto en la vista agrupada: solo ese, por nombre exacto.
   const [only, setOnly] = useState<{ by: "company" | "role"; name: string } | null>(null);
@@ -254,30 +256,38 @@ export default function Panel({
         </button>
       </div>
 
+      {/* Cada grupo en su fila: el nombre y sus globitos seguidos. El nombre tiene ancho
+          fijo para que en el ordenador los globitos queden alineados; en el movil, los que
+          no caben siguen debajo usando todo el ancho. */}
       {!showForm && filtersOpen && rows.length > 0 && (
-        <div className="mt-3 grid gap-4 rounded-2xl border border-border bg-surface p-4">
+        <div className="mt-3 grid gap-3 rounded-2xl border border-border bg-surface p-4">
           {facets
             .filter((f) => f.options.length > 0)
             .map((f) => (
-              <fieldset key={f.key} className="grid gap-2">
-                <legend className="text-sm text-muted">{f.label}</legend>
-                <div className="flex flex-wrap gap-2">
-                  {f.options.map((o) => {
-                    const on = chosen[f.key] === o.id;
-                    return (
-                      <button
-                        key={o.id}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setChosen({ ...chosen, [f.key]: on ? "" : o.id })}
-                        className={chip(on)}
-                      >
-                        {o.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
+              <div
+                key={f.key}
+                role="group"
+                aria-labelledby={`${filtersId}-${f.key}`}
+                className="flex flex-wrap items-center gap-2"
+              >
+                <span id={`${filtersId}-${f.key}`} className="min-w-[5.5rem] text-sm text-muted">
+                  {f.label}
+                </span>
+                {f.options.map((o) => {
+                  const on = chosen[f.key] === o.id;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setChosen({ ...chosen, [f.key]: on ? "" : o.id })}
+                      className={chip(on, "text-foreground")}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
             ))}
         </div>
       )}
@@ -423,8 +433,8 @@ function Tile({
   );
 }
 
-// Resumen de una empresa (o un puesto): cuantas veces, con que puestos (o empresas) y
-// como va la ultima. Las filas llegan de la mas reciente a la mas antigua.
+// Una empresa (o un puesto) con cuantas candidaturas tiene. Al tocarla se ven todas.
+// El nombre es el de la mas reciente: las filas llegan de la mas nueva a la mas antigua.
 function Group({
   rows,
   by,
@@ -436,32 +446,16 @@ function Group({
   t: Dict;
   onPick: () => void;
 }) {
-  const last = rows[0];
-  const other = by === "company" ? "role" : "company";
+  const name = rows[0][by];
   return (
     <button
       type="button"
       onClick={onPick}
-      className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-brand"
+      aria-label={`${name}: ${rows.length} ${rows.length === 1 ? t.totalOne : t.total}`}
+      className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border bg-surface px-4 py-3 text-left transition hover:border-brand"
     >
-      <div className="min-w-0">
-        <p className="truncate font-medium">{last[by]}</p>
-        <p className="truncate text-sm text-muted">
-          {groupBy(rows, other)
-            .map((g) => g[0][other])
-            .join(", ")}
-        </p>
-        <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
-          <span className={`rounded-full px-2.5 py-0.5 font-medium ${tone(last.status)}`}>
-            {t[last.status as keyof Dict] as string}
-          </span>
-          {t.daysAgo(daysSince(last.applied_on))}
-        </p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-2xl font-semibold text-brand">{rows.length}</p>
-        <p className="text-xs text-muted">{rows.length === 1 ? t.totalOne : t.total}</p>
-      </div>
+      <span className="truncate font-medium">{name}</span>
+      <span className="shrink-0 text-lg font-semibold text-brand">{rows.length}</span>
     </button>
   );
 }
@@ -770,6 +764,8 @@ function Suggest({
         name={name}
         required
         placeholder={placeholder}
+        // El texto de dentro desaparece al escribir; esto lo sigue leyendo el lector de pantalla.
+        aria-label={placeholder}
         value={value}
         autoComplete="off"
         role="combobox"
@@ -957,6 +953,7 @@ function ApplicationForm({
         name="url"
         type="url"
         placeholder={`${t.url} (${t.optional})`}
+        aria-label={t.url}
         defaultValue={initial?.url ?? ""}
         className={field}
       />

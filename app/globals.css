@@ -67,6 +67,16 @@
   }
 }
 
+/* Si el movil tiene activado "Reducir movimiento", sin animaciones ni fundidos. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
