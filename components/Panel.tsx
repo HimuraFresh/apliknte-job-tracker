@@ -297,7 +297,7 @@ export default function Panel({
                 type="button"
                 aria-pressed={view === v}
                 onClick={() => setView(v)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                className={`tap rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                   view === v ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"
                 }`}
               >
@@ -530,7 +530,7 @@ function Card({
           <button
             type="button"
             onClick={() => setPicking(!picking)}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${tone(r.status)}`}
+            className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${tone(r.status)}`}
           >
             {t[r.status as keyof Dict] as string}
           </button>
@@ -566,7 +566,7 @@ function Card({
             tabIndex={-1}
             aria-hidden="true"
             onClick={() => setOpen(!open)}
-            className="p-1 text-muted transition hover:text-foreground"
+            className="tap p-1 text-muted transition hover:text-foreground"
           >
             <svg
               viewBox="0 0 24 24"
@@ -636,7 +636,7 @@ function Card({
               <button
                 type="button"
                 onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+                className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
                   r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
                 }`}
               >
@@ -645,7 +645,7 @@ function Card({
               <button
                 type="button"
                 onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+                className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
                   !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
                 }`}
               >
@@ -657,7 +657,7 @@ function Card({
               <button
                 type="button"
                 onClick={onEdit}
-                className="text-xs text-muted transition hover:text-foreground"
+                className="tap py-1 text-xs text-muted transition hover:text-foreground"
               >
                 {t.edit}
               </button>
@@ -667,7 +667,7 @@ function Card({
                   confirming ? run(() => deleteApplication(r.id)) : setConfirming(true)
                 }
                 onBlur={() => setConfirming(false)}
-                className={`text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
+                className={`tap py-1 text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
               >
                 {confirming ? t.confirmDelete : t.delete}
               </button>

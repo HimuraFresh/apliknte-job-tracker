@@ -49,7 +49,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
                 key={l}
                 onClick={() => l !== locale && setLocale(l)}
                 aria-pressed={l === locale}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 transition ${
+                className={`tap flex items-center gap-1.5 px-2.5 py-1.5 transition ${
                   l === locale ? "bg-brand text-on-solid" : "text-muted hover:text-foreground"
                 }`}
               >
@@ -106,7 +106,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
         {mode === "in" && (
           <button
             onClick={() => setMode("reset")}
-            className="mt-3 text-sm text-muted transition hover:text-foreground"
+            className="tap mt-3 text-sm text-muted transition hover:text-foreground"
           >
             {t.forgotPassword}
           </button>
@@ -114,7 +114,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
         {mode === "reset" && (
           <button
             onClick={() => setMode("in")}
-            className="mt-3 text-sm text-muted transition hover:text-foreground"
+            className="tap mt-3 text-sm text-muted transition hover:text-foreground"
           >
             ← {t.backToSignIn}
           </button>
