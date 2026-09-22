@@ -5,6 +5,7 @@ import { useLang } from "@/lib/lang";
 import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
 import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
+import { groupBy, norm } from "@/lib/group";
 import {
   addApplication,
   updateApplication,
@@ -36,9 +37,6 @@ export type Application = {
 export type Cv = { id: string; label: string };
 
 const MAX_CV_BYTES = 5 * 1024 * 1024;
-
-// Busqueda sin tildes ni mayusculas: "iberdrola" encuentra "Iberdrola", "tecnico" encuentra "técnico".
-const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 // Aspecto comun de los botones tipo "globito" que se marcan y desmarcan.
 const chip = (on: boolean) =>
@@ -96,6 +94,9 @@ export default function Panel({
   const [picked, setPicked] = useState<Filter | null>(null);
   const [chosen, setChosen] = useState<Record<string, string>>({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [view, setView] = useState<"list" | "company" | "role">("list");
+  // Al tocar una empresa o un puesto en la vista agrupada: solo ese, por nombre exacto.
+  const [only, setOnly] = useState<{ by: "company" | "role"; name: string } | null>(null);
   const [warning, setWarning] = useState<string>();
   const [suggestOpen, setSuggestOpen] = useState(false);
   const showForm = open || editing !== null;
@@ -151,6 +152,7 @@ export default function Panel({
   const visible = rows.filter(
     (r) =>
       (!filter || FILTERS[filter.key](r)) &&
+      (!only || norm(r[only.by].trim()) === norm(only.name.trim())) &&
       active.every((o) => o.match(r)) &&
       (!q || norm(`${r.company} ${r.role}`).includes(q)),
   );
@@ -158,6 +160,15 @@ export default function Panel({
   // Todo lo que esta filtrando ahora mismo, cada cosa con su ✕ para quitarla.
   const pills = [
     ...(filter ? [{ key: "tile", label: filter.label, clear: () => setPicked(null) }] : []),
+    ...(only
+      ? [
+          {
+            key: "only",
+            label: `${only.by === "company" ? t.company : t.role}: ${only.name}`,
+            clear: () => setOnly(null),
+          },
+        ]
+      : []),
     ...active.map((o) => ({
       key: o.facet,
       label: o.label,
@@ -268,8 +279,29 @@ export default function Panel({
         </div>
       )}
 
-      {!showForm && pills.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
+      {!showForm && rows.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex rounded-xl bg-brand-soft/60 p-1">
+            {(
+              [
+                ["list", t.viewList],
+                ["company", t.viewCompanies],
+                ["role", t.viewRoles],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  view === v ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           {pills.map((p) => (
             <button
               key={p.key}
@@ -324,19 +356,32 @@ export default function Panel({
             </p>
           )}
 
-          {visible.map((r) => (
-            <Card
-              key={r.id}
-              r={r}
-              t={t}
-              locale={locale}
-              cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
-              onEdit={() => {
-                setWarning(undefined);
-                setEditing(r);
-              }}
-            />
-          ))}
+          {view === "list"
+            ? visible.map((r) => (
+                <Card
+                  key={r.id}
+                  r={r}
+                  t={t}
+                  locale={locale}
+                  cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
+                  onEdit={() => {
+                    setWarning(undefined);
+                    setEditing(r);
+                  }}
+                />
+              ))
+            : groupBy(visible, view).map((g) => (
+                <Group
+                  key={norm(g[0][view].trim())}
+                  rows={g}
+                  by={view}
+                  t={t}
+                  onPick={() => {
+                    setOnly({ by: view, name: g[0][view] });
+                    setView("list");
+                  }}
+                />
+              ))}
         </section>
       )}
     </main>
@@ -367,6 +412,49 @@ function Tile({
     >
       <p className={`text-2xl font-semibold ${tone}`}>{n}</p>
       <p className="text-xs text-muted">{label}</p>
+    </button>
+  );
+}
+
+// Resumen de una empresa (o un puesto): cuantas veces, con que puestos (o empresas) y
+// como va la ultima. Las filas llegan de la mas reciente a la mas antigua.
+function Group({
+  rows,
+  by,
+  t,
+  onPick,
+}: {
+  rows: Application[];
+  by: "company" | "role";
+  t: Dict;
+  onPick: () => void;
+}) {
+  const last = rows[0];
+  const other = by === "company" ? "role" : "company";
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className="flex min-w-0 items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-brand"
+    >
+      <div className="min-w-0">
+        <p className="truncate font-medium">{last[by]}</p>
+        <p className="truncate text-sm text-muted">
+          {groupBy(rows, other)
+            .map((g) => g[0][other])
+            .join(", ")}
+        </p>
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+          <span className={`rounded-full px-2.5 py-0.5 font-medium ${tone(last.status)}`}>
+            {t[last.status as keyof Dict] as string}
+          </span>
+          {t.daysAgo(daysSince(last.applied_on))}
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-2xl font-semibold text-brand">{rows.length}</p>
+        <p className="text-xs text-muted">{rows.length === 1 ? t.totalOne : t.total}</p>
+      </div>
     </button>
   );
 }
