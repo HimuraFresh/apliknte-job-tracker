@@ -515,13 +515,10 @@ function Card({
             {r.company}{" "}
             <span className="whitespace-nowrap">· {t.daysAgo(daysSince(r.applied_on))}</span>
           </p>
-          {!r.followed_up && !CLOSED.includes(r.status) && (
-            <p className={`mt-1 text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
-              {daysToFollowUp === 0
-                ? t.followUpToday
-                : daysToFollowUp < 0
-                  ? t.followUpDue(-daysToFollowUp)
-                  : t.followUpSoon(daysToFollowUp)}
+          {/* Fuera solo avisa cuando hay que actuar; "Contactar en X dias" va dentro */}
+          {overdue && (
+            <p className="mt-1 text-xs font-medium text-warn">
+              {daysToFollowUp === 0 ? t.followUpToday : t.followUpDue(-daysToFollowUp)}
             </p>
           )}
         </button>
@@ -654,6 +651,9 @@ function Card({
             </div>
 
             <div className="flex items-center gap-3">
+              {!overdue && !r.followed_up && !CLOSED.includes(r.status) && (
+                <span className="text-xs text-muted">{t.followUpSoon(daysToFollowUp)}</span>
+              )}
               <button
                 type="button"
                 onClick={onEdit}
