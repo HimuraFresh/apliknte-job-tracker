@@ -17,6 +17,7 @@ import {
 import Logo from "@/components/Logo";
 import SuggestionPanel from "@/components/SuggestionPanel";
 import AppMenu from "@/components/AppMenu";
+import CvPanel from "@/components/CvPanel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export type Application = {
@@ -103,6 +104,7 @@ export default function Panel({
   const [only, setOnly] = useState<{ by: "company" | "role"; name: string } | null>(null);
   const [warning, setWarning] = useState<string>();
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [cvsOpen, setCvsOpen] = useState(false);
   const showForm = open || editing !== null;
 
   // Los recuadros a 0 no se muestran. Si el filtro elegido se queda a 0, se ven todas.
@@ -196,10 +198,20 @@ export default function Panel({
             {rows.length} {rows.length === 1 ? t.totalOne : t.total}
           </p>
         </div>
-        <AppMenu onSuggest={() => setSuggestOpen(true)} />
+        <AppMenu
+          onSuggest={() => {
+            setCvsOpen(false);
+            setSuggestOpen(true);
+          }}
+          onCvs={() => {
+            setSuggestOpen(false);
+            setCvsOpen(true);
+          }}
+        />
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}
+      {cvsOpen && <CvPanel cvs={cvs} userId={userId} onClose={() => setCvsOpen(false)} />}
 
       {tiles.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

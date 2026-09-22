@@ -11,7 +11,13 @@ const LANGS = [
 ] as const;
 
 // Menu de la cabecera: idioma, modo oscuro, sugerencias y cerrar sesion.
-export default function AppMenu({ onSuggest }: { onSuggest: () => void }) {
+export default function AppMenu({
+  onSuggest,
+  onCvs,
+}: {
+  onSuggest: () => void;
+  onCvs: () => void;
+}) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
@@ -89,6 +95,17 @@ export default function AppMenu({ onSuggest }: { onSuggest: () => void }) {
                 )}
               </svg>
               {dark ? t.lightMode : t.darkMode}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onCvs();
+              }}
+              className={item}
+            >
+              {t.myCvs}
             </button>
 
             <button

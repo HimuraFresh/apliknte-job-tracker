@@ -128,6 +128,29 @@ export async function setFollowedUp(id: string, followed_up: boolean) {
   return patch(id, { followed_up });
 }
 
+// "Mis CVs" > Cambiar: el navegador ya subio el PDF nuevo; se apunta el CV a el y se borra
+// el viejo. RLS impide tocar CVs de otro usuario (la consulta no los devuelve).
+export async function replaceCv(id: string, path: string) {
+  const { supabase, user } = await currentUser();
+  if (!user) return { error: "auth" };
+  if (!path.startsWith(`${user.id}/`)) return { error: "path" };
+
+  const { data: old } = await supabase
+    .from("cv_versions")
+    .select("file_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!old) return { error: "not_found" };
+
+  const { error } = await supabase.from("cv_versions").update({ file_path: path }).eq("id", id);
+  if (error) return { error: error.message };
+  if (old.file_path && old.file_path !== path) {
+    await supabase.storage.from("cvs").remove([old.file_path]);
+  }
+  revalidatePath("/panel");
+  return {};
+}
+
 const FEEDBACK_KINDS = ["error", "idea", "duda"];
 
 export async function sendFeedback(kind: string, message: string) {
