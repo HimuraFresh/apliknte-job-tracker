@@ -66,6 +66,7 @@ async function readForm(supabase: Supabase, userId: string, formData: FormData) 
       newPath && newLabel
         ? await saveCv(supabase, userId, newLabel, newPath)
         : str(formData.get("cv_version_id")),
+    notes: str(formData.get("notes"))?.slice(0, 2000) ?? null,
   };
 }
 

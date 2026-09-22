@@ -33,6 +33,7 @@ export type Application = {
   follow_up_on: string | null;
   followed_up: boolean;
   cv_version_id: string | null;
+  notes: string | null;
 };
 
 export type Cv = { id: string; label: string };
@@ -621,6 +622,13 @@ function Card({
             </div>
           )}
 
+          {r.notes && (
+            <div className="rounded-xl bg-background p-3">
+              <p className="text-xs text-muted">{t.note}</p>
+              <p className="whitespace-pre-wrap break-words text-sm">{r.notes}</p>
+            </div>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted">{t.notContacted}</span>
@@ -850,6 +858,8 @@ function ApplicationForm({
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [cvLabel, setCvLabel] = useState("");
   const [cvError, setCvError] = useState<string>();
+  // Escondidas tras un boton para no alargar el formulario a quien no las usa.
+  const [showNotes, setShowNotes] = useState(Boolean(initial?.notes));
 
   // El PDF se sube directo del navegador al almacen: no pasa por nuestro servidor
   // (que limita el tamano de lo que recibe). Al servidor solo le llega la ruta.
@@ -1075,6 +1085,27 @@ function ApplicationForm({
           </div>
         )}
       </fieldset>
+
+      {showNotes ? (
+        <label className="grid gap-1 text-sm text-muted">
+          {t.note}
+          <textarea
+            name="notes"
+            defaultValue={initial?.notes ?? ""}
+            maxLength={2000}
+            rows={3}
+            placeholder={t.notePlaceholder}
+            // Al pulsar "+ Añadir nota" se escribe directamente; al editar una que ya
+            // existe no se roba el foco.
+            autoFocus={!initial?.notes}
+            className={`${field} resize-y text-foreground`}
+          />
+        </label>
+      ) : (
+        <button type="button" onClick={() => setShowNotes(true)} className={`w-fit ${chip(false)}`}>
+          {t.addNote}
+        </button>
+      )}
 
       {error && <p className="text-sm text-bad">{error}</p>}
 
