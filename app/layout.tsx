@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { cookies } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
 import { LangProvider } from "@/lib/lang";
 import type { Locale } from "@/lib/dict";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale} data-theme={theme} className={`${geist.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <LangProvider locale={locale}>{children}</LangProvider>
+        <Analytics />
       </body>
     </html>
   );
