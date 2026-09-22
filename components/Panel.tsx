@@ -225,7 +225,8 @@ export default function Panel({
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t.search}
               aria-label={t.search}
-              className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-brand"
+              // 16px en el movil: con menos, el iPhone hace zoom al tocar el campo.
+              className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-base outline-none focus:border-brand sm:text-sm"
             />
             <button
               type="button"
@@ -704,7 +705,7 @@ function DateInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
         type="date"
         onClick={openPicker}
         {...props}
-        className="block w-full min-w-0 appearance-none rounded-xl border border-border bg-surface py-3 pl-4 pr-11 text-left text-foreground outline-none focus:border-brand [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left"
+        className="block w-full min-w-0 appearance-none rounded-xl border border-border bg-surface py-3 pl-4 pr-11 text-left text-base text-foreground outline-none focus:border-brand [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-date-and-time-value]:text-left"
       />
       <svg
         viewBox="0 0 24 24"
@@ -1099,7 +1100,7 @@ function ApplicationForm({
             // Al pulsar "+ Añadir nota" se escribe directamente; al editar una que ya
             // existe no se roba el foco.
             autoFocus={!initial?.notes}
-            className={`${field} resize-y text-foreground`}
+            className={`${field} resize-y text-base text-foreground`}
           />
         </label>
       ) : (
