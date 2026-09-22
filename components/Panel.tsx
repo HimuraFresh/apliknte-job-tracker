@@ -6,6 +6,7 @@ import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
 import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
 import { groupBy, norm } from "@/lib/group";
+import { COMPANIES } from "@/lib/companies";
 import {
   addApplication,
   updateApplication,
@@ -662,12 +663,14 @@ function Suggest({
   placeholder,
   defaultValue,
   options,
+  more = [],
   className,
 }: {
   name: string;
   placeholder: string;
   defaultValue: string;
   options: string[];
+  more?: readonly string[];
   className: string;
 }) {
   const [value, setValue] = useState(defaultValue);
@@ -676,7 +679,16 @@ function Suggest({
   const listId = useId();
 
   const q = norm(value.trim());
-  const matches = options.filter((o) => o !== value && norm(o).includes(q)).slice(0, 6);
+  const hit = (o: string) => o !== value && norm(o).includes(q);
+  // Primero lo que ya usaste. Las de "more" (empresas precargadas) solo salen al escribir,
+  // sin repetir las tuyas, y antes las que empiezan por lo escrito o tienen una palabra
+  // que empieza asi: con "ib", Iberia antes que Agencia Tributaria.
+  const rank = (o: string) => (norm(o).startsWith(q) ? 0 : norm(o).includes(` ${q}`) ? 1 : 2);
+  const mine = new Set(options.map(norm));
+  const extra = q
+    ? more.filter((m) => !mine.has(norm(m)) && hit(m)).sort((a, b) => rank(a) - rank(b))
+    : [];
+  const matches = [...options.filter(hit), ...extra].slice(0, 6);
   const show = open && matches.length > 0;
 
   const choose = (option: string) => {
@@ -836,6 +848,7 @@ function ApplicationForm({
         placeholder={t.company}
         defaultValue={initial?.company ?? ""}
         options={companies}
+        more={COMPANIES}
         className={field}
       />
       <Suggest
