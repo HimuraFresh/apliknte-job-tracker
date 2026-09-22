@@ -184,7 +184,7 @@ export default function Panel({
 
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 p-5 sm:p-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 p-5 sm:p-8">
       <header className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl">
@@ -255,7 +255,7 @@ export default function Panel({
       </div>
 
       {!showForm && filtersOpen && rows.length > 0 && (
-        <div className="mt-3 grid max-w-3xl gap-4 rounded-2xl border border-border bg-surface p-4">
+        <div className="mt-3 grid gap-4 rounded-2xl border border-border bg-surface p-4">
           {facets
             .filter((f) => f.options.length > 0)
             .map((f) => (
@@ -283,7 +283,7 @@ export default function Panel({
       )}
 
       {!showForm && rows.length > 0 && (
-        <div className="mt-3 flex max-w-3xl flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <div className="flex rounded-xl bg-brand-soft/60 p-1">
             {(
               [
@@ -341,7 +341,7 @@ export default function Panel({
       )}
 
       {warning && (
-        <div className="mt-4 flex max-w-3xl items-start justify-between gap-3 rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm text-warn">
+        <div className="mt-4 flex items-start justify-between gap-3 rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm text-warn">
           <p>{warning}</p>
           <button onClick={() => setWarning(undefined)} aria-label={t.cancel} className="shrink-0">
             ✕
@@ -350,7 +350,7 @@ export default function Panel({
       )}
 
       {!showForm && (
-        <section className="mt-4 grid max-w-3xl gap-3">
+        <section className="mt-4 grid gap-3">
           {rows.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
               {t.empty}
