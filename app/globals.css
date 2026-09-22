@@ -6,17 +6,18 @@
   --background: #f5f8fc;
   --surface: #ffffff;
   --foreground: #0f172a;
-  --muted: #64748b;
+  --muted: #56657b; /* gris que aun se lee sobre el fondo azulado (4.5:1 o mas) */
   --border: #e2e8f0;
   --brand: #2563eb;
   --brand-strong: #1d4ed8; /* el nombre "Apliknte" */
   --brand-soft: #eff6ff;
   --accent: #38bdf8; /* el punto de "Apliknte." */
   --on-solid: #ffffff; /* texto sobre fondos de color solido (botones, "Contratado") */
-  /* verde y ambar oscurecidos para que el texto pequeno se lea bien sobre blanco */
-  --ok: #15803d;
-  --warn: #b45309;
-  --bad: #dc2626;
+  /* un tono mas oscuros para que el texto pequeno de los globos de estado se lea sobre
+     su propio fondo tintado (4.5:1 o mas, medido) */
+  --ok: #166534;
+  --warn: #92400e;
+  --bad: #b91c1c;
 }
 
 /* Oscuro: morado sobre casi negro, como la primera version de la app. Los colores se

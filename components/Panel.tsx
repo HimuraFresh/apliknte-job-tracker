@@ -48,14 +48,14 @@ const chip = (on: boolean) =>
 
 const STATUS_TONE: Record<string, string> = {
   aplicado: "bg-brand-soft text-brand",
-  cribado: "bg-brand/20 text-brand",
+  cribado: "bg-brand/20 text-brand-strong",
   entrevista_1: "bg-warn/15 text-warn",
   entrevista_2: "bg-warn/20 text-warn",
-  entrevista_3: "bg-warn/30 text-warn",
+  entrevista_3: "bg-warn/25 text-warn",
   oferta: "bg-ok/20 text-ok",
   contratado: "bg-ok text-on-solid",
   rechazado: "bg-bad/15 text-bad",
-  retirado: "bg-muted/20 text-muted",
+  retirado: "bg-muted/15 text-muted",
 };
 
 const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted";
@@ -963,7 +963,7 @@ function ApplicationForm({
 
       <fieldset className="grid gap-2">
         <legend className="text-sm text-muted">{t.salary}</legend>
-        <p className="-mt-1 text-xs text-muted/80">{t.salaryHint}</p>
+        <p className="-mt-1 text-xs text-muted">{t.salaryHint}</p>
         <button
           type="button"
           onClick={() => setNoSalary(!noSalary)}
@@ -1148,7 +1148,7 @@ function Chips({
   return (
     <fieldset className="grid gap-2">
       <legend className="text-sm text-muted">{label}</legend>
-      {hint && <p className="-mt-1 text-xs text-muted/80">{hint}</p>}
+      {hint && <p className="-mt-1 text-xs text-muted">{hint}</p>}
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <label key={o} className="cursor-pointer">
