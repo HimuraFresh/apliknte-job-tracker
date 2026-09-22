@@ -287,4 +287,4 @@ export const STATUSES = [
 
 export const WORK_MODES = ["presencial", "hibrido", "remoto", "no_especifica"] as const;
 
-export const SOURCES = ["LinkedIn", "InfoJobs", "Indeed", "Web empresa", "Contacto", "Otra"];
+export const SOURCES = ["LinkedIn", "InfoJobs", "Indeed", "Glassdoor", "Web empresa", "Contacto", "Otra"];
