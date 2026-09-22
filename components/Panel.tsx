@@ -478,6 +478,7 @@ function Card({
   onEdit: () => void;
 }) {
   const [pending, start] = useTransition();
+  const [open, setOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
@@ -485,6 +486,11 @@ function Card({
   // Negativo = ya deberias haber contactado.
   const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
   const overdue = isDue(r);
+  const salary =
+    r.salary_min || r.salary_max
+      ? `${money(r.salary_min, locale)}${r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}`
+      : null;
+  const hasDetails = r.work_mode || r.source || salary || r.url || cvLabel;
 
   return (
     <article
@@ -492,13 +498,33 @@ function Card({
         overdue ? "border-warn/60" : "border-border hover:border-brand"
       } ${pending ? "opacity-60" : ""}`}
     >
+      {/* Cerrada, solo lo esencial y el aviso de seguimiento. La cabecera abre los detalles
+          (solo para verlos: para cambiarlos esta Editar). El estado se cambia aparte. */}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="min-w-0 flex-1 text-left"
+        >
           <h2 className="truncate font-medium">{r.role}</h2>
-          <p className="truncate text-sm text-muted">{r.company}</p>
-        </div>
+          {/* Sin cortar nada: si no cabe, "· hace 18 dias" baja entero a la linea siguiente */}
+          <p className="break-words text-sm text-muted">
+            {r.company}{" "}
+            <span className="whitespace-nowrap">· {t.daysAgo(daysSince(r.applied_on))}</span>
+          </p>
+          {!r.followed_up && !CLOSED.includes(r.status) && (
+            <p className={`mt-1 text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
+              {daysToFollowUp === 0
+                ? t.followUpToday
+                : daysToFollowUp < 0
+                  ? t.followUpDue(-daysToFollowUp)
+                  : t.followUpSoon(daysToFollowUp)}
+            </p>
+          )}
+        </button>
 
-        <div className="relative shrink-0">
+        <div className="relative flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => setPicking(!picking)}
@@ -532,92 +558,125 @@ function Card({
               </div>
             </>
           )}
+          {/* La flecha tambien abre y cierra; para el lector de pantalla ya esta la cabecera */}
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
+            onClick={() => setOpen(!open)}
+            className="p-1 text-muted transition hover:text-foreground"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-5 w-5 transition ${open ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-        <span>{t.daysAgo(daysSince(r.applied_on))}</span>
-        {r.work_mode && <span>· {t[r.work_mode as keyof Dict] as string}</span>}
-        {r.source && <span>· {r.source}</span>}
-        {(r.salary_min || r.salary_max) && (
-          <span>
-            · {money(r.salary_min, locale)}
-            {r.salary_max ? ` - ${money(r.salary_max, locale)}` : ""}
-          </span>
-        )}
-        {r.url && (
-          <a
-            href={r.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand hover:underline"
-          >
-            · {t.url}
-          </a>
-        )}
-        {cvLabel && (
-          <a
-            href={`/cv/${r.cv_version_id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-brand hover:underline"
-          >
-            · CV: {cvLabel}
-          </a>
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted">{t.notContacted}</span>
-          <button
-            type="button"
-            onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
-              r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
-            }`}
-          >
-            {r.followed_up ? `✓ ${t.yes}` : t.yes}
-          </button>
-          <button
-            type="button"
-            onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
-              !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
-            }`}
-          >
-            {t.notYet}
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {!r.followed_up && !CLOSED.includes(r.status) && (
-            <span className={`text-xs ${overdue ? "font-medium text-warn" : "text-muted"}`}>
-              {daysToFollowUp === 0
-                ? t.followUpToday
-                : daysToFollowUp < 0
-                  ? t.followUpDue(-daysToFollowUp)
-                  : t.followUpSoon(daysToFollowUp)}
-            </span>
+      {open && (
+        <div className="mt-3 grid gap-4 border-t border-border pt-3">
+          {hasDetails && (
+            <div className="grid grid-cols-2 gap-x-5">
+              <dl className="grid content-start gap-3">
+                {r.work_mode && (
+                  <Detail label={t.workMode}>{t[r.work_mode as keyof Dict] as string}</Detail>
+                )}
+                {r.source && <Detail label={t.source}>{r.source}</Detail>}
+                {salary && <Detail label={t.salaryShort}>{salary}</Detail>}
+              </dl>
+              <dl className="grid content-start gap-3">
+                {r.url && (
+                  <Detail label={t.offer}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand hover:underline"
+                    >
+                      {t.viewOffer} ↗
+                    </a>
+                  </Detail>
+                )}
+                {cvLabel && (
+                  <Detail label={t.cvSent}>
+                    <a
+                      href={`/cv/${r.cv_version_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-brand hover:underline"
+                    >
+                      {cvLabel} ↗
+                    </a>
+                  </Detail>
+                )}
+              </dl>
+            </div>
           )}
-          <button
-            type="button"
-            onClick={onEdit}
-            className="text-xs text-muted transition hover:text-foreground"
-          >
-            {t.edit}
-          </button>
-          <button
-            type="button"
-            onClick={() => (confirming ? run(() => deleteApplication(r.id)) : setConfirming(true))}
-            onBlur={() => setConfirming(false)}
-            className={`text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
-          >
-            {confirming ? t.confirmDelete : t.delete}
-          </button>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted">{t.notContacted}</span>
+              <button
+                type="button"
+                onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+                  r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
+                }`}
+              >
+                {r.followed_up ? `✓ ${t.yes}` : t.yes}
+              </button>
+              <button
+                type="button"
+                onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+                  !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
+                }`}
+              >
+                {t.notYet}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="text-xs text-muted transition hover:text-foreground"
+              >
+                {t.edit}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  confirming ? run(() => deleteApplication(r.id)) : setConfirming(true)
+                }
+                onBlur={() => setConfirming(false)}
+                className={`text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
+              >
+                {confirming ? t.confirmDelete : t.delete}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </article>
+  );
+}
+
+// Un dato de la ficha abierta: etiqueta pequeña encima y el valor algo mas grande.
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className="break-words text-[15px]">{children}</dd>
+    </div>
   );
 }
 
