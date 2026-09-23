@@ -35,6 +35,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/panel", request.url));
   }
 
+  // Sin guardar en el navegador: al reabrir la pestana, Chrome mostraba la copia vieja
+  // del panel (con las candidaturas de entonces) en vez de pedirla otra vez.
+  if (isPrivate) response.headers.set("Cache-Control", "no-store, must-revalidate");
+
   return response;
 }
 
