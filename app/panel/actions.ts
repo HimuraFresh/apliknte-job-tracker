@@ -128,6 +128,12 @@ export async function setFollowedUp(id: string, followed_up: boolean) {
   return patch(id, { followed_up });
 }
 
+// Aplazar el aviso de seguimiento o quitarlo: sin fecha no volvemos a avisar. Hay empresas
+// a las que no hay a quien escribir y el recordatorio solo molesta.
+export async function setFollowUp(id: string, follow_up_on: string | null) {
+  return patch(id, { follow_up_on });
+}
+
 // "Mis CVs" > Cambiar: el navegador ya subio el PDF nuevo; se apunta el CV a el y se borra
 // el viejo. RLS impide tocar CVs de otro usuario (la consulta no los devuelve).
 export async function replaceCv(id: string, path: string) {

@@ -12,6 +12,7 @@ import {
   updateApplication,
   deleteApplication,
   setFollowedUp,
+  setFollowUp,
   setStatus,
 } from "@/app/panel/actions";
 import Logo from "@/components/Logo";
@@ -64,12 +65,15 @@ const tone = (status: string) => STATUS_TONE[status] ?? "bg-muted/15 text-muted"
 
 const CLOSED = ["contratado", "rechazado", "retirado"];
 const INTERVIEWING = ["cribado", "entrevista_1", "entrevista_2", "entrevista_3"];
+// No se mezclan con las vivas: se miran aparte, con el boton "Rechazadas".
+const DISMISSED = ["rechazado", "retirado"];
 
-// Sin fecha guardada damos por supuestos 15 dias desde que aplicaste.
+// Sin fecha de seguimiento no avisamos: asi se apaga el aviso ("no hace falta contactar").
 const isDue = (r: Application) =>
+  !!r.follow_up_on &&
   !r.followed_up &&
   !CLOSED.includes(r.status) &&
-  daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15)) <= 0;
+  daysUntil(r.follow_up_on) <= 0;
 
 // Cada recuadro del resumen cuenta y filtra con la misma regla.
 const FILTERS = {
@@ -107,6 +111,7 @@ export default function Panel({
   const [cvsOpen, setCvsOpen] = useState(false);
   // La candidatura abierta: dentro de su ficha en el movil, en el panel derecho en el ordenador.
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showDismissed, setShowDismissed] = useState(false);
   const showForm = open || editing !== null;
 
   // Los recuadros a 0 no se muestran. Si el filtro elegido se queda a 0, se ven todas.
@@ -157,8 +162,10 @@ export default function Panel({
   );
 
   const q = norm(query.trim());
+  const dismissed = rows.filter((r) => DISMISSED.includes(r.status)).length;
   const visible = rows.filter(
     (r) =>
+      DISMISSED.includes(r.status) === showDismissed &&
       (!filter || FILTERS[filter.key](r)) &&
       (!only || norm(r[only.by].trim()) === norm(only.name.trim())) &&
       active.every((o) => o.match(r)) &&
@@ -330,6 +337,23 @@ export default function Panel({
               </button>
             ))}
           </div>
+          {dismissed > 0 && (
+            <button
+              type="button"
+              aria-pressed={showDismissed}
+              onClick={() => {
+                setShowDismissed(!showDismissed);
+                setPicked(null);
+              }}
+              className={`tap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                showDismissed
+                  ? "border-bad bg-bad/10 text-bad"
+                  : "border-border text-muted hover:text-foreground"
+              }`}
+            >
+              {t.viewRejected}
+            </button>
+          )}
           {pills.map((p) => (
             <button
               key={p.key}
@@ -534,10 +558,11 @@ function Card({
 }) {
   const [pending, start] = useTransition();
   const [picking, setPicking] = useState(false);
+  const [nudging, setNudging] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
 
   // Negativo = ya deberias haber contactado.
-  const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
+  const daysToFollowUp = r.follow_up_on ? daysUntil(r.follow_up_on) : 0;
   const overdue = isDue(r);
 
   return (
@@ -561,12 +586,6 @@ function Card({
             {r.company}{" "}
             <span className="whitespace-nowrap">· {t.daysAgo(daysSince(r.applied_on))}</span>
           </p>
-          {/* Fuera solo avisa cuando hay que actuar; "Contactar en X dias" va dentro */}
-          {overdue && (
-            <p className="mt-1 text-xs font-medium text-warn">
-              {daysToFollowUp === 0 ? t.followUpToday : t.followUpDue(-daysToFollowUp)}
-            </p>
-          )}
         </button>
 
         <div className="relative flex shrink-0 items-center gap-1">
@@ -626,6 +645,44 @@ function Card({
         </div>
       </div>
 
+      {/* Fuera solo avisa cuando hay que actuar ("Contactar en X dias" va dentro). Al tocarlo
+          se aplaza o se apaga: hay empresas a las que no hay a quien escribir. */}
+      {overdue && (
+        <div className="relative mt-1">
+          <button
+            type="button"
+            onClick={() => setNudging(!nudging)}
+            aria-expanded={nudging}
+            className="tap text-left text-xs font-medium text-warn underline decoration-dotted underline-offset-4"
+          >
+            {daysToFollowUp === 0 ? t.followUpToday : t.followUpDue(-daysToFollowUp)}
+          </button>
+          {nudging && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setNudging(false)} />
+              <div className="absolute left-0 z-20 mt-2 grid w-60 gap-1 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                {[
+                  { label: t.remindLater, date: plusDays(today(), 15) as string | null },
+                  { label: t.noFollowUp, date: null },
+                ].map((o) => (
+                  <button
+                    key={o.label}
+                    type="button"
+                    onClick={() => {
+                      setNudging(false);
+                      run(() => setFollowUp(r.id, o.date));
+                    }}
+                    className="rounded-xl px-3 py-2 text-left text-sm transition hover:bg-brand-soft"
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* En el movil los detalles se abren aqui; en el ordenador van al panel de la derecha */}
       {open && (
         <div className="mt-3 border-t border-border pt-3 lg:hidden">
@@ -655,7 +712,7 @@ function Details({
   const [confirming, setConfirming] = useState(false);
   const run = (fn: () => Promise<unknown>) => start(() => void fn());
 
-  const daysToFollowUp = daysUntil(r.follow_up_on ?? plusDays(r.applied_on, 15));
+  const daysToFollowUp = r.follow_up_on ? daysUntil(r.follow_up_on) : 0;
   const overdue = isDue(r);
   const salary =
     r.salary_min || r.salary_max
@@ -735,9 +792,23 @@ function Details({
             </div>
 
             <div className="flex items-center gap-3">
-              {!overdue && !r.followed_up && !CLOSED.includes(r.status) && (
-                <span className="text-xs text-muted">{t.followUpSoon(daysToFollowUp)}</span>
-              )}
+              {!overdue &&
+                !r.followed_up &&
+                !CLOSED.includes(r.status) &&
+                (r.follow_up_on ? (
+                  <span className="text-xs text-muted">{t.followUpSoon(daysToFollowUp)}</span>
+                ) : (
+                  <span className="text-xs text-muted">
+                    {t.followUpOff}{" "}
+                    <button
+                      type="button"
+                      onClick={() => run(() => setFollowUp(r.id, plusDays(today(), 15)))}
+                      className="tap text-brand transition hover:underline"
+                    >
+                      {t.followUpBack}
+                    </button>
+                  </span>
+                ))}
               <button
                 type="button"
                 onClick={onEdit}
