@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { useLang, setLocale, setTheme } from "@/lib/lang";
 import { signOut } from "@/app/entrar/actions";
 import Flag from "@/components/Flag";
+import Install from "@/components/Install";
 
 const LANGS = [
   { code: "es", label: "Español" },
@@ -118,6 +119,8 @@ export default function AppMenu({
             >
               {t.suggestions}
             </button>
+
+            <Install className={item} />
 
             <div className="my-1 border-t border-border" />
             <form action={signOut}>
