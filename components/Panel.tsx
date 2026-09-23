@@ -661,8 +661,10 @@ function Card({
             <>
               <div className="fixed inset-0 z-10" onClick={() => setNudging(false)} />
               <div className="absolute left-0 z-20 mt-2 grid w-60 gap-1 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                {/* Aplazar cuenta desde hoy, no desde que aplicaste. Volver a activarlo
+                    desde la ficha si pone el plazo normal de la app, 15 dias. */}
                 {[
-                  { label: t.remindLater, date: plusDays(today(), 15) as string | null },
+                  { label: t.remindLater, date: plusDays(today(), 7) as string | null },
                   { label: t.noFollowUp, date: null },
                 ].map((o) => (
                   <button
