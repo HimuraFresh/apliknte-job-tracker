@@ -34,8 +34,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale} data-theme={theme} className={`${geist.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <LangProvider locale={locale}>{children}</LangProvider>
-        {/* Las letras pequenas de abajo, en todas las pantallas. */}
-        <footer className="p-6 text-center text-xs text-muted">
+        {/* Las letras pequenas de abajo: centradas en el movil, en la esquina en pantalla grande. */}
+        <footer className="p-6 text-center text-xs text-muted sm:px-8 sm:text-right">
           <a href="/privacidad" className="transition hover:text-foreground">
             {locale === "en" ? "Privacy" : "Privacidad"}
           </a>
