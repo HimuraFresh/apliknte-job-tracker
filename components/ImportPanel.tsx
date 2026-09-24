@@ -9,7 +9,7 @@ import type { Application, Cv } from "@/components/Panel";
 import type { Dict } from "@/lib/dict";
 
 const MAX_BYTES = 2 * 1024 * 1024;
-export const MAX_ROWS = 300;
+const MAX_ROWS = 300;
 
 // Importar de una hoja de calculo. Tres formas de traerla, porque cada uno tiene la suya:
 // arrastrar el archivo, elegirlo, o pegar las celdas copiadas (Excel y Sheets ponen en el

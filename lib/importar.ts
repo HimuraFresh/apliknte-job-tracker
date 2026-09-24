@@ -1,6 +1,6 @@
 import { norm } from "./group.ts";
 import { toEuros } from "./money.ts";
-import { STATUSES, WORK_MODES, SOURCES } from "./dict.ts";
+import { SOURCES } from "./dict.ts";
 
 // Leer la tabla que trae el usuario: un CSV, un TSV o las celdas copiadas de Excel o de
 // Sheets (al pegar, el portapapeles ya viene separado por tabuladores). No se usa ninguna
@@ -244,5 +244,3 @@ export function mapRows(
   return { drafts, columns, ignored };
 }
 
-export const STATUS_OK = (s: string) => STATUSES.includes(s as (typeof STATUSES)[number]);
-export const MODE_OK = (m: string) => WORK_MODES.includes(m as (typeof WORK_MODES)[number]);

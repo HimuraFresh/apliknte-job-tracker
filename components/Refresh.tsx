@@ -3,18 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useLang } from "@/lib/lang";
+import { isStandalone } from "@/components/Install";
 
 // Dentro de la app instalada no hay barra del navegador, y el iPhone tampoco da el gesto
 // de deslizar para recargar: sin este boton no habria forma de pedir los datos de nuevo.
 // En el navegador normal no aparece, que ahi ya esta el del propio navegador.
-const standalone = () =>
-  typeof window !== "undefined" &&
-  (window.matchMedia("(display-mode: standalone)").matches ||
-    !!(navigator as Navigator & { standalone?: boolean }).standalone);
-
 export default function Refresh() {
   const { t } = useLang();
-  const [show] = useState(standalone);
+  const [show] = useState(isStandalone);
   const [pending, start] = useTransition();
   const router = useRouter();
 

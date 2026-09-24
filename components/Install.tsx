@@ -15,14 +15,18 @@ if (typeof window !== "undefined") {
   });
 }
 
+// Si estamos dentro de la app instalada y no en el navegador. Safari viejo no entiende
+// display-mode, pero marca navigator.standalone. Lo usa tambien el boton de actualizar.
+export const isStandalone = () =>
+  typeof window !== "undefined" &&
+  (window.matchMedia("(display-mode: standalone)").matches ||
+    !!(navigator as Navigator & { standalone?: boolean }).standalone);
+
 // Como se instala aqui, si es que se puede. Se mira al montar, ya en el navegador: este
-// menu no existe hasta que lo abres. Safari viejo no entiende display-mode pero marca
-// navigator.standalone.
+// menu no existe hasta que lo abres.
 function detect(): "prompt" | "ios" | null {
-  if (typeof window === "undefined") return null;
-  const nav = navigator as Navigator & { standalone?: boolean };
-  if (window.matchMedia("(display-mode: standalone)").matches || nav.standalone) return null;
-  return deferred ? "prompt" : /iphone|ipad|ipod/i.test(nav.userAgent) ? "ios" : null;
+  if (typeof window === "undefined" || isStandalone()) return null;
+  return deferred ? "prompt" : /iphone|ipad|ipod/i.test(navigator.userAgent) ? "ios" : null;
 }
 
 // Instalar la app en el movil. Android abre su propio dialogo; Safari no ofrece ninguno,

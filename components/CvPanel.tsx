@@ -6,7 +6,8 @@ import { replaceCv, deleteCv } from "@/app/panel/actions";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cv } from "@/components/Panel";
 
-const MAX_CV_BYTES = 5 * 1024 * 1024;
+// Lo mismo que acepta el almacen de Supabase. Lo usa tambien el formulario del panel.
+export const MAX_CV_BYTES = 5 * 1024 * 1024;
 
 // "Mis CVs" del menu: ver cada PDF (el navegador lo abre), descargarlo o cambiarlo por
 // otro. Cambiar mantiene el tipo, asi que las candidaturas que lo usaban siguen igual.

@@ -21,7 +21,7 @@ import Logo from "@/components/Logo";
 import SuggestionPanel from "@/components/SuggestionPanel";
 import AppMenu from "@/components/AppMenu";
 import Refresh from "@/components/Refresh";
-import CvPanel from "@/components/CvPanel";
+import CvPanel, { MAX_CV_BYTES } from "@/components/CvPanel";
 import ImportPanel from "@/components/ImportPanel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -43,8 +43,6 @@ export type Application = {
 };
 
 export type Cv = { id: string; label: string };
-
-const MAX_CV_BYTES = 5 * 1024 * 1024;
 
 // Aspecto comun de los botones tipo "globito" que se marcan y desmarcan. En los filtros,
 // la palabra elegida va en el color de texto principal (blanco en oscuro) para que resalte.
