@@ -1,8 +1,9 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import { useLang, setLocale, setTheme } from "@/lib/lang";
 import { signOut } from "@/app/entrar/actions";
+import { deleteAccount } from "@/app/panel/actions";
 import Flag from "@/components/Flag";
 import Install from "@/components/Install";
 
@@ -22,6 +23,8 @@ export default function AppMenu({
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
+  const [killing, setKilling] = useState(false);
+  const [pending, start] = useTransition();
   const menuId = useId();
 
   const toggle = () => {
@@ -126,6 +129,38 @@ export default function AppMenu({
             <form action={signOut}>
               <button className={`${item} text-bad hover:bg-bad/10`}>{t.signOut}</button>
             </form>
+
+            {/* Apagado y sin color hasta que lo tocas: no es algo que se pulse sin querer. */}
+            {killing ? (
+              <div className="grid gap-2 rounded-xl bg-bad/5 p-3">
+                <p className="text-sm text-bad">{t.deleteAccountWarning}</p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => start(() => void deleteAccount())}
+                    className="rounded-lg bg-bad px-3 py-1.5 text-xs font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
+                  >
+                    {t.deleteAccountConfirm}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKilling(false)}
+                    className="tap px-2 text-xs text-muted transition hover:text-foreground"
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setKilling(true)}
+                className={`${item} text-muted hover:bg-bad/10 hover:text-bad`}
+              >
+                {t.deleteAccount}
+              </button>
+            )}
           </div>
         </>
       )}

@@ -79,3 +79,18 @@ alter table public.feedback enable row level security;
 
 create policy "send own feedback" on public.feedback
   for insert with check (auth.uid() = user_id);
+
+-- Borrar la propia cuenta. Corre con permisos del duenno de la funcion (por eso puede
+-- tocar auth.users), pero solo borra la fila de quien llama: auth.uid(). Asi no hace
+-- falta guardar en ningun sitio la llave de administrador de Supabase.
+-- Al borrar el usuario caen sus candidaturas y sus CVs por cascada; los PDF del almacen
+-- los borra la app antes, que esos no van en cascada.
+create or replace function public.delete_account()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$ delete from auth.users where id = auth.uid(); $$;
+
+revoke all on function public.delete_account() from public, anon;
+grant execute on function public.delete_account() to authenticated;

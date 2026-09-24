@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { toEuros } from "@/lib/money";
 import { plusDays, today } from "@/lib/dates";
@@ -171,4 +172,24 @@ export async function sendFeedback(kind: string, message: string) {
     .insert({ user_id: user.id, email: user.email, kind, message: text });
   if (error) return { error: error.message };
   return {};
+}
+
+// Borrar la cuenta entera. Los PDF van primero: no se borran en cascada con el usuario
+// y se quedarian ocupando el almacen para siempre. Lo demas (candidaturas, CVs) cae solo
+// al borrar el usuario. No hay vuelta atras.
+export async function deleteAccount() {
+  const { supabase, user } = await currentUser();
+  if (!user) return { error: "auth" };
+
+  const { data: files } = await supabase.storage.from("cvs").list(user.id);
+  if (files?.length) {
+    await supabase.storage.from("cvs").remove(files.map((f) => `${user.id}/${f.name}`));
+  }
+
+  const { error } = await supabase.rpc("delete_account");
+  if (error) return { error: error.message };
+
+  // La sesion ya no vale para nada, pero hay que quitar la cookie del navegador.
+  await supabase.auth.signOut();
+  redirect("/entrar");
 }
