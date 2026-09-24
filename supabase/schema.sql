@@ -31,6 +31,12 @@ create table if not exists public.applications (
 create index if not exists applications_user_applied_idx
   on public.applications (user_id, applied_on desc);
 
+-- La puerta general: sin esto la app no puede tocar la tabla, por mucho que las politicas
+-- de abajo lo permitan. Supabase lo hacia solo al crear cada tabla, pero desde el
+-- 30-10-2026 hay que escribirlo. "anon" (sin sesion iniciada) no recibe nada.
+grant select, insert, update, delete on public.cv_versions  to authenticated, service_role;
+grant select, insert, update, delete on public.applications to authenticated, service_role;
+
 alter table public.cv_versions  enable row level security;
 alter table public.applications enable row level security;
 
@@ -64,6 +70,10 @@ create table if not exists public.feedback (
   message    text not null check (char_length(message) between 1 and 2000),
   created_at timestamptz not null default now()
 );
+
+-- Los usuarios solo escriben; leerlas es cosa del panel de Supabase.
+grant insert on public.feedback to authenticated;
+grant select, insert, update, delete on public.feedback to service_role;
 
 alter table public.feedback enable row level security;
 
