@@ -283,3 +283,18 @@ export async function importApplications(drafts: unknown) {
   revalidatePath("/panel");
   return { added: rows.length };
 }
+
+// Borrar varias a la vez desde la seleccion del panel.
+export async function deleteApplications(ids: unknown) {
+  const supabase = await supabaseServer();
+  if (!Array.isArray(ids) || ids.length === 0) return { error: "required" };
+
+  const limpios = ids.filter((id): id is string => typeof id === "string").slice(0, 500);
+  if (limpios.length === 0) return { error: "required" };
+
+  const { error } = await supabase.from("applications").delete().in("id", limpios);
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel");
+  return {};
+}

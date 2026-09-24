@@ -128,6 +128,10 @@ export const dict = {
     summaryInterviews: "En entrevistas",
     summaryDue: "Toca contactar",
     clearFilter: "Quitar filtro",
+    select: "Seleccionar",
+    selectAll: "Todas",
+    selected: (n: number): string =>
+      n === 0 ? "Ninguna seleccionada" : n === 1 ? "1 seleccionada" : `${n} seleccionadas`,
     filters: "Filtros",
     lastDays: (n: number): string => (n === 7 ? "Última semana" : n === 30 ? "Último mes" : "Últimos 3 meses"),
     noMatches: "Ninguna candidatura cumple estos filtros.",
@@ -317,6 +321,10 @@ export const dict = {
     summaryInterviews: "Interviewing",
     summaryDue: "Follow up due",
     clearFilter: "Clear filter",
+    select: "Select",
+    selectAll: "All",
+    selected: (n: number): string =>
+      n === 0 ? "None selected" : n === 1 ? "1 selected" : `${n} selected`,
     filters: "Filters",
     lastDays: (n: number): string => (n === 7 ? "Last week" : n === 30 ? "Last month" : "Last 3 months"),
     noMatches: "No applications match these filters.",

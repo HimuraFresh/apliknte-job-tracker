@@ -12,6 +12,7 @@ import {
   addApplication,
   updateApplication,
   deleteApplication,
+  deleteApplications,
   setFollowedUp,
   setFollowUp,
   setStatus,
@@ -113,6 +114,10 @@ export default function Panel({
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [cvsOpen, setCvsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // null = no estamos seleccionando. Una lista (aunque este vacia) = modo seleccion.
+  const [chosen2, setChosen2] = useState<string[] | null>(null);
+  const [erasing, setErasing] = useState(false);
+  const [bulk, startBulk] = useTransition();
   // La candidatura abierta: dentro de su ficha en el movil, en el panel derecho en el ordenador.
   const [openId, setOpenId] = useState<string | null>(null);
   const [showDismissed, setShowDismissed] = useState(false);
@@ -427,6 +432,15 @@ export default function Panel({
               {t.viewRejected}
             </button>
           )}
+          {view === "list" && visible.length > 0 && !chosen2 && (
+            <button
+              type="button"
+              onClick={() => setChosen2([])}
+              className="tap rounded-full border border-border px-3 py-1.5 text-xs text-muted transition hover:text-foreground"
+            >
+              {t.select}
+            </button>
+          )}
           {pills.map((p) => (
             <button
               key={p.key}
@@ -444,6 +458,49 @@ export default function Panel({
               {t.shown(visible.length, rows.length)}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Modo seleccion: cuantas llevas, marcar todas las que se ven y borrarlas de golpe.
+          Borrar pide dos toques, como en la ficha. */}
+      {chosen2 && !showForm && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-brand/40 bg-brand-soft/60 p-3 text-sm">
+          <span className="font-medium">{t.selected(chosen2.length)}</span>
+          <button
+            type="button"
+            onClick={() => setChosen2(visible.map((r) => r.id))}
+            className="tap text-brand transition hover:underline"
+          >
+            {t.selectAll}
+          </button>
+          <button
+            type="button"
+            disabled={chosen2.length === 0 || bulk}
+            onClick={() => {
+              if (!erasing) return setErasing(true);
+              startBulk(async () => {
+                await deleteApplications(chosen2);
+                setErasing(false);
+                setChosen2(null);
+              });
+            }}
+            onBlur={() => setErasing(false)}
+            className={`tap ml-auto transition disabled:opacity-40 ${
+              erasing ? "font-medium text-bad" : "text-muted hover:text-bad"
+            }`}
+          >
+            {erasing ? t.confirmDelete : t.delete}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setErasing(false);
+              setChosen2(null);
+            }}
+            className="tap text-muted transition hover:text-foreground"
+          >
+            {t.cancel}
+          </button>
         </div>
       )}
 
@@ -516,7 +573,16 @@ export default function Panel({
                     locale={locale}
                     cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
                     open={openId === r.id}
-                    onToggle={() => setOpenId(openId === r.id ? null : r.id)}
+                    checked={chosen2?.includes(r.id)}
+                    onToggle={() =>
+                      chosen2
+                        ? setChosen2(
+                            chosen2.includes(r.id)
+                              ? chosen2.filter((id) => id !== r.id)
+                              : [...chosen2, r.id],
+                          )
+                        : setOpenId(openId === r.id ? null : r.id)
+                    }
                     onEdit={() => {
                       setWarning(undefined);
                       setEditing(r);
@@ -639,6 +705,7 @@ function Card({
   locale,
   cvLabel,
   open,
+  checked,
   onToggle,
   onEdit,
 }: {
@@ -647,6 +714,8 @@ function Card({
   locale: string;
   cvLabel?: string;
   open: boolean;
+  // undefined = no estamos seleccionando; true o false = casilla marcada o sin marcar
+  checked?: boolean;
   onToggle: () => void;
   onEdit: () => void;
 }) {
@@ -663,15 +732,24 @@ function Card({
     <article
       className={`relative min-w-0 rounded-2xl border bg-surface p-4 transition ${
         overdue ? "border-warn/60" : "border-border hover:border-brand"
-      } ${open ? "ring-1 ring-brand" : ""} ${pending ? "opacity-60" : ""}`}
+      } ${open || checked ? "ring-1 ring-brand" : ""} ${pending ? "opacity-60" : ""}`}
     >
       {/* Cerrada, solo lo esencial y el aviso de seguimiento. La cabecera abre los detalles
           (solo para verlos: para cambiarlos esta Editar). El estado se cambia aparte. */}
       <div className="flex items-start justify-between gap-3">
+        {checked !== undefined && (
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={onToggle}
+            aria-label={`${r.role} - ${r.company}`}
+            className="mt-1 h-4 w-4 shrink-0 accent-[var(--brand)]"
+          />
+        )}
         <button
           type="button"
           onClick={onToggle}
-          aria-expanded={open}
+          aria-expanded={checked === undefined ? open : undefined}
           className="min-w-0 flex-1 text-left"
         >
           <h2 className="truncate font-medium">{r.role}</h2>
