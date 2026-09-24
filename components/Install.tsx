@@ -48,7 +48,30 @@ export default function Install({ className }: { className: string }) {
       >
         {t.install}
       </button>
-      {showHow && <p className="px-3 pb-2 text-xs text-muted">{t.installIos}</p>}
+      {showHow && (
+        <ol className="grid gap-2 px-3 pb-3 pt-1 text-xs text-muted">
+          <li className="flex items-center gap-1.5">
+            1 · {t.installIos1}
+            {/* Dibujado y no descrito: el boton esta arriba o abajo segun el navegador,
+                pero el icono es el mismo en todos. */}
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-foreground"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3v12M8 7l4-4 4 4" />
+              <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+            </svg>
+          </li>
+          <li>2 · {t.installIos2}</li>
+          <li>3 · {t.installIos3}</li>
+        </ol>
+      )}
     </>
   );
 }
