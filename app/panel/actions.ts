@@ -5,12 +5,20 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { toEuros } from "@/lib/money";
 import { plusDays, today } from "@/lib/dates";
+import { STATUSES, WORK_MODES, SOURCES } from "@/lib/dict";
 
 type Supabase = Awaited<ReturnType<typeof supabaseServer>>;
 
 const str = (v: FormDataEntryValue | null) => {
   const s = String(v ?? "").trim();
   return s === "" ? null : s;
+};
+
+// Solo una de las opciones que ofrece la app: una peticion hecha a mano no puede colar
+// un estado inventado ni un texto kilometrico. Lo mismo vigila la base de datos.
+const one = (v: FormDataEntryValue | null, allowed: readonly string[]) => {
+  const s = str(v);
+  return s && allowed.includes(s) ? s : null;
 };
 
 // El navegador ya subio el PDF a cvs/<usuario>/...; aqui se registra con su tipo.
@@ -51,16 +59,19 @@ async function readForm(supabase: Supabase, userId: string, formData: FormData) 
   const newPath = str(formData.get("cv_new_path"));
   const newLabel = str(formData.get("cv_new_label"));
 
+  // Solo enlaces navegables: "javascript:..." abriria codigo al pulsar en la ficha.
+  const url = str(formData.get("url"));
+
   return {
-    company,
-    role,
-    source: str(formData.get("source")),
-    url: str(formData.get("url")),
-    work_mode: str(formData.get("work_mode")),
+    company: company.slice(0, 120),
+    role: role.slice(0, 120),
+    source: one(formData.get("source"), SOURCES),
+    url: url && /^https?:\/\//.test(url) ? url.slice(0, 500) : null,
+    work_mode: one(formData.get("work_mode"), WORK_MODES),
     salary_min: toEuros(formData.get("salary_min")),
     salary_max: toEuros(formData.get("salary_max")),
     applied_on: appliedOn,
-    status: str(formData.get("status")) ?? "aplicado",
+    status: one(formData.get("status"), STATUSES) ?? "aplicado",
     // Si no la elige, se asigna sola a 15 dias de la fecha de aplicacion.
     follow_up_on: str(formData.get("follow_up_on")) ?? plusDays(appliedOn, 15),
     cv_version_id:
@@ -122,6 +133,7 @@ async function patch(id: string, fields: Record<string, unknown>) {
 }
 
 export async function setStatus(id: string, status: string) {
+  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return { error: "status" };
   return patch(id, { status });
 }
 
@@ -132,6 +144,7 @@ export async function setFollowedUp(id: string, followed_up: boolean) {
 // Aplazar el aviso de seguimiento o quitarlo: sin fecha no volvemos a avisar. Hay empresas
 // a las que no hay a quien escribir y el recordatorio solo molesta.
 export async function setFollowUp(id: string, follow_up_on: string | null) {
+  if (follow_up_on && !/^\d{4}-\d{2}-\d{2}$/.test(follow_up_on)) return { error: "fecha" };
   return patch(id, { follow_up_on });
 }
 

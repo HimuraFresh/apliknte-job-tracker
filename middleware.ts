@@ -39,6 +39,13 @@ export async function middleware(request: NextRequest) {
   // del panel (con las candidaturas de entonces) en vez de pedirla otra vez.
   if (isPrivate) response.headers.set("Cache-Control", "no-store, must-revalidate");
 
+  // Que ninguna web pueda meter Apliknte dentro de un marco invisible y hacer que
+  // pulses cosas sin verlas, ni adivinar tipos de archivo, ni llevarse la direccion
+  // completa al salir a otra pagina.
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
   return response;
 }
 

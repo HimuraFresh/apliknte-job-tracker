@@ -39,8 +39,9 @@ columns at first, an unreadable endless scroll two months later.
 ## Stack
 
 - [Next.js 16](https://nextjs.org) (App Router, Server Actions) + TypeScript
-- [Supabase](https://supabase.com): Postgres, auth, and row-level security so
-  every user can only ever read and write their own rows
+- [Supabase](https://supabase.com): Postgres, auth, row-level security so every
+  user can only ever read and write their own rows, and constraints that reject
+  anything the app itself would never send
 - [Tailwind CSS 4](https://tailwindcss.com)
 - Deployed on [Vercel](https://vercel.com) at [apliknte.vercel.app](https://apliknte.vercel.app)
 
@@ -93,7 +94,8 @@ You need Node.js 20+ and a free Supabase project.
    npm run dev
    ```
 
-Dates, password rules and grouping are covered by automated tests: `npm test`.
+Dates, password rules, grouping and salary conversion are covered by
+automated tests: `npm test`.
 
 ## Roadmap
 
@@ -156,9 +158,9 @@ nadie entiende a los dos meses.
 ### Tecnologías
 
 - [Next.js 16](https://nextjs.org) (App Router, Server Actions) + TypeScript
-- [Supabase](https://supabase.com): Postgres, autenticación y seguridad a
-  nivel de fila, para que cada usuario solo pueda leer y escribir sus propios
-  datos
+- [Supabase](https://supabase.com): Postgres, autenticación, seguridad a nivel
+  de fila para que cada usuario solo pueda leer y escribir sus propios datos, y
+  restricciones que rechazan cualquier cosa que la propia app nunca enviaría
 - [Tailwind CSS 4](https://tailwindcss.com)
 - Desplegada en [Vercel](https://vercel.com) en [apliknte.vercel.app](https://apliknte.vercel.app)
 
@@ -212,8 +214,8 @@ Necesitas Node.js 20 o superior y un proyecto gratuito de Supabase.
    npm run dev
    ```
 
-Las fechas, las reglas de contraseña y la agrupación están cubiertas por
-tests automáticos: `npm test`.
+Las fechas, las reglas de contraseña, la agrupación y la conversión de sueldos
+están cubiertas por tests automáticos: `npm test`.
 
 ### Hoja de ruta
 

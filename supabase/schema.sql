@@ -94,3 +94,25 @@ as $$ delete from auth.users where id = auth.uid(); $$;
 
 revoke all on function public.delete_account() from public, anon;
 grant execute on function public.delete_account() to authenticated;
+
+-- La app solo manda estos valores, pero el servidor se tragaba cualquier texto: una
+-- peticion hecha a mano podia guardar cualquier cosa, o un texto de megabytes. Ponerlo
+-- aqui vale para todos los caminos a la vez (alta, edicion y cambio de estado).
+alter table public.applications
+  add constraint applications_status_ok
+    check (status in ('aplicado', 'cribado', 'entrevista_1', 'entrevista_2', 'entrevista_3',
+                      'oferta', 'contratado', 'rechazado', 'retirado')),
+  add constraint applications_work_mode_ok
+    check (work_mode is null or work_mode in ('presencial', 'hibrido', 'remoto', 'no_especifica')),
+  add constraint applications_limites_ok
+    check (
+      char_length(company) between 1 and 120
+      and char_length(role) between 1 and 120
+      and (source is null or char_length(source) <= 40)
+      and (notes is null or char_length(notes) <= 2000)
+      -- enlaces de verdad y nada mas: ni javascript: ni data:
+      and (url is null or (url ~ '^https?://' and char_length(url) <= 500))
+    );
+
+alter table public.cv_versions
+  add constraint cv_versions_label_ok check (char_length(label) between 1 and 60);
