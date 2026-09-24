@@ -18,6 +18,7 @@ import {
 import Logo from "@/components/Logo";
 import SuggestionPanel from "@/components/SuggestionPanel";
 import AppMenu from "@/components/AppMenu";
+import Refresh from "@/components/Refresh";
 import CvPanel from "@/components/CvPanel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
@@ -208,16 +209,19 @@ export default function Panel({
             {rows.length} {rows.length === 1 ? t.totalOne : t.total}
           </p>
         </div>
-        <AppMenu
-          onSuggest={() => {
-            setCvsOpen(false);
-            setSuggestOpen(true);
-          }}
-          onCvs={() => {
-            setSuggestOpen(false);
-            setCvsOpen(true);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <Refresh />
+          <AppMenu
+            onSuggest={() => {
+              setCvsOpen(false);
+              setSuggestOpen(true);
+            }}
+            onCvs={() => {
+              setSuggestOpen(false);
+              setCvsOpen(true);
+            }}
+          />
+        </div>
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}

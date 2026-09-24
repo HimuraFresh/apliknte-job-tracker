@@ -112,6 +112,10 @@ export default function AppMenu({
               {t.myCvs}
             </button>
 
+            <a href="/ayuda" className={item}>
+              {t.help}
+            </a>
+
             <button
               type="button"
               onClick={() => {
