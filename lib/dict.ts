@@ -67,6 +67,30 @@ export const dict = {
     cvTooBig: "El PDF pasa de 5 MB.",
     cvSaveWarning: (msg: string) => `Candidatura guardada, pero el CV no se pudo subir: ${msg}`,
     myCvs: "Mis CVs",
+    importCsv: "Importar",
+    importCta: "Subir mi tabla",
+    importTitle: "¿Ya las tienes apuntadas en algún sitio?",
+    importIntro:
+      "Si llevas la cuenta en un Excel, en Sheets o en una tabla, tráela y rellenamos tus candidaturas por ti.",
+    importDrop: "Arrastra aquí tu archivo, o",
+    importChoose: "elige uno",
+    importHint: "CSV o TSV. Lo único imprescindible son dos columnas: empresa y puesto.",
+    importPaste: "…o pega aquí las celdas copiadas de tu hoja",
+    importXlsx:
+      "Los archivos de Excel (.xlsx) no se pueden leer tal cual. En Excel: Archivo → Guardar como → CSV. En Sheets: Archivo → Descargar → CSV. O copia las celdas y pégalas abajo.",
+    importTooBig: "El archivo es demasiado grande. El máximo son 2 MB.",
+    importNothing:
+      "No hemos encontrado ninguna candidatura. Hacen falta dos columnas: una con la empresa y otra con el puesto.",
+    importFound: (n: number): string =>
+      n === 1 ? "Hemos entendido 1 candidatura:" : `Hemos entendido ${n} candidaturas:`,
+    importMore: (n: number): string => (n === 1 ? "y 1 más" : `y ${n} más`),
+    importIgnored: (cols: string): string => `Columnas que no usamos: ${cols}`,
+    importTooMany: (n: number): string => `Se importarán las primeras ${n}. El resto, en otra tanda.`,
+    importDo: (n: number): string =>
+      n === 1 ? "Importar 1 candidatura" : `Importar ${n} candidaturas`,
+    importDone: (n: number): string =>
+      n === 1 ? "Listo. 1 candidatura añadida." : `Listo. ${n} candidaturas añadidas.`,
+    importFailed: "No se han podido importar. Vuelve a intentarlo.",
     exportCsv: "Exportar CSV",
     csvSalaryMin: "Salario mínimo",
     csvSalaryMax: "Salario máximo",
@@ -231,6 +255,29 @@ export const dict = {
     cvTooBig: "The PDF is larger than 5 MB.",
     cvSaveWarning: (msg: string) => `Application saved, but the CV couldn't be uploaded: ${msg}`,
     myCvs: "My CVs",
+    importCsv: "Import",
+    importCta: "Upload my sheet",
+    importTitle: "Already tracking them somewhere?",
+    importIntro:
+      "If you keep them in Excel, in Sheets or in any table, bring it over and we'll fill in your applications for you.",
+    importDrop: "Drop your file here, or",
+    importChoose: "choose one",
+    importHint: "CSV or TSV. All you really need are two columns: company and role.",
+    importPaste: "…or paste the cells copied from your sheet here",
+    importXlsx:
+      "Excel files (.xlsx) can't be read as they are. In Excel: File → Save as → CSV. In Sheets: File → Download → CSV. Or copy the cells and paste them below.",
+    importTooBig: "That file is too big. The limit is 2 MB.",
+    importNothing:
+      "We found no applications in there. You need two columns: one with the company and one with the role.",
+    importFound: (n: number): string =>
+      n === 1 ? "We understood 1 application:" : `We understood ${n} applications:`,
+    importMore: (n: number): string => (n === 1 ? "and 1 more" : `and ${n} more`),
+    importIgnored: (cols: string): string => `Columns we don't use: ${cols}`,
+    importTooMany: (n: number): string => `The first ${n} will be imported. The rest, in another batch.`,
+    importDo: (n: number): string => (n === 1 ? "Import 1 application" : `Import ${n} applications`),
+    importDone: (n: number): string =>
+      n === 1 ? "Done. 1 application added." : `Done. ${n} applications added.`,
+    importFailed: "We couldn't import them. Try again.",
     exportCsv: "Export CSV",
     csvSalaryMin: "Minimum salary",
     csvSalaryMax: "Maximum salary",

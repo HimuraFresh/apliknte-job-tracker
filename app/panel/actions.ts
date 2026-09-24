@@ -225,3 +225,61 @@ export async function deleteCv(id: string) {
   revalidatePath("/panel");
   return {};
 }
+
+// Importar una hoja de calculo. Lo que llega del navegador se comprueba entero otra vez:
+// la pantalla de importar la puede saltar cualquiera, asi que aqui no nos fiamos de nada.
+const MAX_IMPORT = 300;
+
+const inList = (v: unknown, allowed: readonly string[]) =>
+  typeof v === "string" && allowed.includes(v) ? v : null;
+
+const isDate = (v: unknown) =>
+  typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
+
+export async function importApplications(drafts: unknown) {
+  const { supabase, user } = await currentUser();
+  if (!user) return { error: "auth" };
+  if (!Array.isArray(drafts) || drafts.length === 0) return { error: "required" };
+
+  // Solo se puede enlazar un CV tuyo, aunque manden el identificador de otro.
+  const { data: cvs } = await supabase.from("cv_versions").select("id");
+  const mine = new Set((cvs ?? []).map((cv) => cv.id as string));
+
+  const rows = drafts.slice(0, MAX_IMPORT).flatMap((d) => {
+    const r = (d ?? {}) as Record<string, unknown>;
+    const company = String(r.company ?? "").trim().slice(0, 120);
+    const role = String(r.role ?? "").trim().slice(0, 120);
+    if (!company || !role) return [];
+
+    const applied = isDate(r.applied_on) ?? today();
+    const url = String(r.url ?? "");
+    const cv = typeof r.cv_version_id === "string" && mine.has(r.cv_version_id);
+
+    return [
+      {
+        user_id: user.id,
+        company,
+        role,
+        status: inList(r.status, STATUSES) ?? "aplicado",
+        work_mode: inList(r.work_mode, WORK_MODES),
+        source: inList(r.source, SOURCES),
+        salary_min: toEuros(r.salary_min),
+        salary_max: toEuros(r.salary_max),
+        applied_on: applied,
+        follow_up_on: isDate(r.follow_up_on) ?? plusDays(applied, 15),
+        followed_up: r.followed_up === true,
+        url: /^https?:\/\//.test(url) ? url.slice(0, 500) : null,
+        notes: String(r.notes ?? "").slice(0, 2000) || null,
+        cv_version_id: cv ? (r.cv_version_id as string) : null,
+      },
+    ];
+  });
+
+  if (rows.length === 0) return { error: "required" };
+
+  const { error } = await supabase.from("applications").insert(rows);
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel");
+  return { added: rows.length };
+}

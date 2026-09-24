@@ -17,10 +17,12 @@ export default function AppMenu({
   onSuggest,
   onCvs,
   onExport,
+  onImport,
 }: {
   onSuggest: () => void;
   onCvs: () => void;
   onExport: () => void;
+  onImport: () => void;
 }) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
@@ -112,6 +114,17 @@ export default function AppMenu({
               className={item}
             >
               {t.myCvs}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onImport();
+              }}
+              className={item}
+            >
+              {t.importCsv}
             </button>
 
             <button

@@ -21,6 +21,7 @@ import SuggestionPanel from "@/components/SuggestionPanel";
 import AppMenu from "@/components/AppMenu";
 import Refresh from "@/components/Refresh";
 import CvPanel from "@/components/CvPanel";
+import ImportPanel from "@/components/ImportPanel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 export type Application = {
@@ -111,6 +112,7 @@ export default function Panel({
   const [warning, setWarning] = useState<string>();
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [cvsOpen, setCvsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   // La candidatura abierta: dentro de su ficha en el movil, en el panel derecho en el ordenador.
   const [openId, setOpenId] = useState<string | null>(null);
   const [showDismissed, setShowDismissed] = useState(false);
@@ -263,18 +265,26 @@ export default function Panel({
           <AppMenu
             onSuggest={() => {
               setCvsOpen(false);
+              setImportOpen(false);
               setSuggestOpen(true);
             }}
             onCvs={() => {
               setSuggestOpen(false);
+              setImportOpen(false);
               setCvsOpen(true);
             }}
             onExport={exportCsv}
+            onImport={() => {
+              setSuggestOpen(false);
+              setCvsOpen(false);
+              setImportOpen(true);
+            }}
           />
         </div>
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}
+      {importOpen && <ImportPanel cvs={cvs} onClose={() => setImportOpen(false)} />}
       {cvsOpen && (
         <CvPanel
           cvs={cvs}
@@ -472,9 +482,23 @@ export default function Panel({
         <div className="mt-4 lg:flex lg:items-start lg:gap-4">
           <section className="grid gap-3 lg:min-w-0 lg:flex-1">
             {rows.length === 0 && (
-              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-                {t.empty}
-              </p>
+              <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+                <p className="text-muted">{t.empty}</p>
+                {/* La invitacion a importar solo mientras no hay nada: luego se va sola. */}
+                {!importOpen && (
+                  <>
+                    <p className="mt-6 font-medium">{t.importTitle}</p>
+                    <p className="mx-auto mt-1 max-w-sm text-sm text-muted">{t.importIntro}</p>
+                    <button
+                      type="button"
+                      onClick={() => setImportOpen(true)}
+                      className="mt-4 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-on-solid transition hover:opacity-90"
+                    >
+                      {t.importCta}
+                    </button>
+                  </>
+                )}
+              </div>
             )}
 
             {rows.length > 0 && visible.length === 0 && (
