@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import Logo from "@/components/Logo";
+import { title } from "@/lib/title";
 
-export const metadata = { title: "Privacidad · Apliknte" };
+export const generateMetadata = () => title("Privacidad", "Privacy");
 
 // El texto vive aqui y no en dict.ts: es largo, cambia poco y asi se lee de corrido.
 // Publica a proposito (sin sesion): la gente tiene que poder leerla antes de registrarse.
@@ -11,9 +12,14 @@ export default async function Privacidad() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 p-6 sm:p-8">
-      <a href="/panel" className="text-xl">
-        <Logo />
-      </a>
+      <div className="flex items-center justify-between gap-4">
+        <a href="/panel" className="text-xl">
+          <Logo />
+        </a>
+        <a href="/panel" className="tap text-sm text-muted transition hover:text-foreground">
+          ← {t.back}
+        </a>
+      </div>
       <h1 className="mt-6 text-2xl font-medium">{t.title}</h1>
       <p className="mt-1 text-sm text-muted">{t.updated}</p>
 
@@ -30,6 +36,7 @@ export default async function Privacidad() {
 }
 
 const ES = {
+  back: "Volver",
   title: "Privacidad",
   updated: "Última actualización: 24 de septiembre de 2026",
   sections: [
@@ -77,6 +84,7 @@ const ES = {
 };
 
 const EN = {
+  back: "Back",
   title: "Privacy",
   updated: "Last updated: 24 September 2026",
   sections: [

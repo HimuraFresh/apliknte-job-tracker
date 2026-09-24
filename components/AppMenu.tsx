@@ -44,7 +44,7 @@ export default function AppMenu({
         aria-label={t.menu}
         aria-expanded={open}
         aria-controls={menuId}
-        className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface text-foreground transition hover:border-brand"
+        className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-surface text-foreground transition hover:border-brand"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}

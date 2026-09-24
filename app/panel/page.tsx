@@ -1,5 +1,8 @@
 import { supabaseServer } from "@/lib/supabase/server";
+import { title } from "@/lib/title";
 import Panel, { type Application, type Cv } from "@/components/Panel";
+
+export const generateMetadata = () => title("Candidaturas", "Applications");
 
 export default async function PanelPage() {
   const supabase = await supabaseServer();
