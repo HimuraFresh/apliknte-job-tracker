@@ -34,8 +34,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang={locale} data-theme={theme} className={`${geist.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <LangProvider locale={locale}>{children}</LangProvider>
-        {/* Las letras pequenas de abajo: centradas en el movil, en la esquina en pantalla grande. */}
-        <footer className="p-6 pb-12 text-center text-xs text-muted sm:px-8 sm:pb-6 sm:text-right">
+        {/* Las letras pequenas de abajo. Mismo ancho que el panel para que en pantalla
+            grande queden bajo el borde derecho de las fichas y no perdidas en la esquina
+            de la ventana. En el movil, centradas y despegadas de la barra del iPhone. */}
+        <footer className="mx-auto w-full max-w-3xl p-6 pb-12 text-center text-xs text-muted sm:px-8 sm:pb-6 sm:text-right lg:max-w-5xl">
           <a href="/privacidad" className="tap transition hover:text-foreground">
             {locale === "en" ? "Privacy" : "Privacidad"}
           </a>
