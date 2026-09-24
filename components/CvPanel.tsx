@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useLang } from "@/lib/lang";
-import { replaceCv } from "@/app/panel/actions";
+import { replaceCv, deleteCv } from "@/app/panel/actions";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { Cv } from "@/components/Panel";
 
@@ -12,16 +12,38 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 // otro. Cambiar mantiene el tipo, asi que las candidaturas que lo usaban siguen igual.
 export default function CvPanel({
   cvs,
+  uses,
   userId,
   onClose,
 }: {
   cvs: Cv[];
+  // cuantas candidaturas usan cada CV, para avisar antes de borrarlo
+  uses: Record<string, number>;
   userId: string;
   onClose: () => void;
 }) {
   const { t } = useLang();
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string }>();
+  const [confirming, setConfirming] = useState<string>();
+
+  // Borrar pide dos toques, como en las candidaturas. El primero dice a cuantas
+  // candidaturas les va a quitar el CV: se quedan sin el, pero no se borran.
+  function remove(id: string) {
+    if (confirming !== id) {
+      setConfirming(id);
+      setMessage({ ok: false, text: t.cvInUse(uses[id] ?? 0) });
+      return;
+    }
+    setConfirming(undefined);
+    setMessage(undefined);
+    start(async () => {
+      const res = await deleteCv(id);
+      setMessage(
+        res.error ? { ok: false, text: t.cvDeleteFailed } : { ok: true, text: t.cvDeleted },
+      );
+    });
+  }
 
   function replace(id: string, file: File | undefined) {
     if (!file) return;
@@ -77,6 +99,16 @@ export default function CvPanel({
                     }}
                   />
                 </label>
+                <button
+                  type="button"
+                  onClick={() => remove(cv.id)}
+                  onBlur={() => confirming === cv.id && setConfirming(undefined)}
+                  className={`tap transition ${
+                    confirming === cv.id ? "font-medium text-bad" : "text-muted hover:text-bad"
+                  }`}
+                >
+                  {confirming === cv.id ? t.confirmDelete : t.delete}
+                </button>
               </span>
             </li>
           ))}

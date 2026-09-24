@@ -206,3 +206,22 @@ export async function deleteAccount() {
   await supabase.auth.signOut();
   redirect("/entrar");
 }
+
+// Borrar un CV entero. Las candidaturas que lo llevaban no se borran: se quedan sin CV
+// (la columna se pone a null sola). El PDF sale tambien del almacen.
+export async function deleteCv(id: string) {
+  const supabase = await supabaseServer();
+  const { data: cv } = await supabase
+    .from("cv_versions")
+    .select("file_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!cv) return { error: "not_found" };
+
+  const { error } = await supabase.from("cv_versions").delete().eq("id", id);
+  if (error) return { error: error.message };
+  if (cv.file_path) await supabase.storage.from("cvs").remove([cv.file_path]);
+
+  revalidatePath("/panel");
+  return {};
+}

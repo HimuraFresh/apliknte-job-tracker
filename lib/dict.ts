@@ -79,6 +79,14 @@ export const dict = {
     cvReplace: "Cambiar",
     cvReplaced: "CV cambiado. Las candidaturas que lo usaban ya apuntan al nuevo.",
     cvReplaceFailed: "No se pudo cambiar el CV. Inténtalo de nuevo en un momento.",
+    cvDeleted: "CV borrado",
+    cvDeleteFailed: "No se ha podido borrar. Vuelve a intentarlo.",
+    cvInUse: (n: number): string =>
+      n === 0
+        ? "No lo usa ninguna candidatura."
+        : n === 1
+          ? "Lo usa 1 candidatura, que se quedará sin CV."
+          : `Lo usan ${n} candidaturas, que se quedarán sin CV.`,
     cvNone: "Todavía no has subido ningún CV. Se suben al crear o editar una candidatura.",
     edit: "Editar",
     delete: "Borrar",
@@ -229,6 +237,14 @@ export const dict = {
     cvReplace: "Replace",
     cvReplaced: "CV replaced. The applications using it now point to the new one.",
     cvReplaceFailed: "The CV couldn't be replaced. Try again in a moment.",
+    cvDeleted: "CV deleted",
+    cvDeleteFailed: "Couldn't delete it. Try again.",
+    cvInUse: (n: number): string =>
+      n === 0
+        ? "No application uses it."
+        : n === 1
+          ? "1 application uses it, and will be left without a CV."
+          : `${n} applications use it, and will be left without a CV.`,
     cvNone: "You haven't uploaded any CV yet. You upload them when creating or editing an application.",
     edit: "Edit",
     delete: "Delete",

@@ -192,6 +192,9 @@ export default function Panel({
     })),
   ];
   const cvLabels = new Map(cvs.map((cv) => [cv.id, cv.label]));
+  const cvUses = Object.fromEntries(
+    cvs.map((cv) => [cv.id, rows.filter((r) => r.cv_version_id === cv.id).length]),
+  );
   const selected = visible.find((r) => r.id === openId);
 
   const companies = [...new Set(rows.map((r) => r.company))];
@@ -224,7 +227,14 @@ export default function Panel({
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}
-      {cvsOpen && <CvPanel cvs={cvs} userId={userId} onClose={() => setCvsOpen(false)} />}
+      {cvsOpen && (
+        <CvPanel
+          cvs={cvs}
+          uses={cvUses}
+          userId={userId}
+          onClose={() => setCvsOpen(false)}
+        />
+      )}
 
       {tiles.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
