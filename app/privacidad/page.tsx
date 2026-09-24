@@ -54,7 +54,7 @@ const ES = {
     },
     {
       h: "Quién puede verlos",
-      p: "Solo tú. La base de datos tiene reglas que impiden que un usuario vea las filas de otro, y los PDF están en un almacén privado al que solo se accede con un enlace temporal generado para ti.\nComo administrador tengo acceso técnico a la base de datos, igual que cualquiera que mantenga un servicio. No miro tus candidaturas, y si alguna vez hiciera falta para resolver un problema que tú nos cuentes, te lo diríamos antes.",
+      p: "Solo tú. La base de datos tiene reglas que impiden que un usuario vea las filas de otro, y los PDF están en un almacén privado al que solo se accede con un enlace temporal generado para ti.\nQuien mantiene el servicio necesita acceso técnico a la base de datos; sin él no se pueden arreglar averías ni recuperar una copia de seguridad. Ese acceso está para eso. Si para resolver un problema que nos cuentes hiciera falta mirar una candidatura tuya, te lo pedimos antes.",
     },
     {
       h: "Cookies",
@@ -102,7 +102,7 @@ const EN = {
     },
     {
       h: "Who can see it",
-      p: "Only you. The database has rules that stop one user from reading another user's rows, and the PDFs sit in a private store reachable only through a temporary link generated for you.\nAs the administrator I have technical access to the database, like anyone running a service. I don't read your applications, and if it were ever needed to fix a problem you report, we'd tell you first.",
+      p: "Only you. The database has rules that stop one user from reading another user's rows, and the PDFs sit in a private store reachable only through a temporary link generated for you.\nWhoever runs the service needs technical access to the database; without it you can't fix breakages or restore a backup. That access is there for that. If fixing something you report meant opening one of your applications, we ask you first.",
     },
     {
       h: "Cookies",
