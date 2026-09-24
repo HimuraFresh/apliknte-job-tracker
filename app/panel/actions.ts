@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { toEuros } from "@/lib/money";
 import { plusDays, today } from "@/lib/dates";
+import { dupKey } from "@/lib/group";
 import { STATUSES, WORK_MODES, SOURCES } from "@/lib/dict";
 
 type Supabase = Awaited<ReturnType<typeof supabaseServer>>;
@@ -96,6 +97,13 @@ export async function addApplication(formData: FormData) {
 
   const fields = await readForm(supabase, user.id, formData);
   if (!fields) return { error: "required" };
+
+  // Misma empresa, mismo puesto y misma fecha: ya la tienes apuntada.
+  const { data: yaEstan } = await supabase
+    .from("applications")
+    .select("company, role, applied_on")
+    .eq("applied_on", fields.applied_on);
+  if ((yaEstan ?? []).some((r) => dupKey(r) === dupKey(fields))) return { error: "duplicate" };
 
   const { error } = await supabase
     .from("applications")
@@ -277,11 +285,23 @@ export async function importApplications(drafts: unknown) {
 
   if (rows.length === 0) return { error: "required" };
 
-  const { error } = await supabase.from("applications").insert(rows);
+  // Se saltan las que ya tienes y las que vienen repetidas dentro del propio archivo.
+  const { data: yaEstan } = await supabase.from("applications").select("company, role, applied_on");
+  const vistas = new Set((yaEstan ?? []).map(dupKey));
+  const nuevas = rows.filter((r) => {
+    const clave = dupKey(r);
+    if (vistas.has(clave)) return false;
+    vistas.add(clave);
+    return true;
+  });
+
+  if (nuevas.length === 0) return { added: 0, skipped: rows.length };
+
+  const { error } = await supabase.from("applications").insert(nuevas);
   if (error) return { error: error.message };
 
   revalidatePath("/panel");
-  return { added: rows.length };
+  return { added: nuevas.length, skipped: rows.length - nuevas.length };
 }
 
 // Borrar varias a la vez desde la seleccion del panel.

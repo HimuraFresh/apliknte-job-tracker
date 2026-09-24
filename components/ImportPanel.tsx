@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useLang } from "@/lib/lang";
-import { parse, mapRows, type Mapped } from "@/lib/importar";
+import { parse, mapRows, type Draft, type Mapped } from "@/lib/importar";
+import { dupKey } from "@/lib/group";
 import { importApplications } from "@/app/panel/actions";
-import type { Cv } from "@/components/Panel";
+import type { Application, Cv } from "@/components/Panel";
 import type { Dict } from "@/lib/dict";
 
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -15,16 +16,20 @@ export const MAX_ROWS = 300;
 // portapapeles una tabla separada por tabuladores, que sabemos leer igual).
 export default function ImportPanel({
   cvs,
+  rows,
   onClose,
 }: {
   cvs: Cv[];
+  // las que ya tienes, para no volver a meterlas
+  rows: Application[];
   onClose: () => void;
 }) {
   const { t } = useLang();
   const [pending, start] = useTransition();
-  const [mapped, setMapped] = useState<Mapped>();
+  const [mapped, setMapped] = useState<Mapped & { fresh: Draft[]; skipped: number }>();
   const [problem, setProblem] = useState<string>();
   const [done, setDone] = useState<number>();
+  const [skipped, setSkipped] = useState(0);
   const [over, setOver] = useState(false);
 
   function read(text: string) {
@@ -36,7 +41,17 @@ export default function ImportPanel({
       setProblem(t.importNothing);
       return;
     }
-    setMapped(result);
+
+    // Fuera las que ya tienes y las que el archivo repite dentro de si mismo.
+    const vistas = new Set(rows.map(dupKey));
+    const fresh: Draft[] = [];
+    for (const d of result.drafts) {
+      const clave = dupKey(d);
+      if (vistas.has(clave)) continue;
+      vistas.add(clave);
+      fresh.push(d);
+    }
+    setMapped({ ...result, fresh, skipped: result.drafts.length - fresh.length });
   }
 
   async function readFile(file: File | undefined) {
@@ -50,9 +65,10 @@ export default function ImportPanel({
   function save() {
     if (!mapped) return;
     start(async () => {
-      const res = await importApplications(mapped.drafts.slice(0, MAX_ROWS));
+      const res = await importApplications(mapped.fresh.slice(0, MAX_ROWS));
       if (res.error) return setProblem(t.importFailed);
       setDone(res.added ?? 0);
+      setSkipped(mapped.skipped);
       setMapped(undefined);
     });
   }
@@ -68,7 +84,7 @@ export default function ImportPanel({
 
       {done !== undefined ? (
         <p role="status" className="text-sm text-ok">
-          {t.importDone(done)}
+          {t.importDone(done)} {skipped > 0 && t.importSkipped(skipped)}
         </p>
       ) : (
         <>
@@ -148,17 +164,18 @@ function Preview({
   pending,
   onSave,
 }: {
-  mapped: Mapped;
+  mapped: Mapped & { fresh: Draft[]; skipped: number };
   t: Dict;
   pending: boolean;
   onSave: () => void;
 }) {
-  const total = Math.min(mapped.drafts.length, MAX_ROWS);
-  const first = mapped.drafts.slice(0, 5);
+  const total = Math.min(mapped.fresh.length, MAX_ROWS);
+  const first = mapped.fresh.slice(0, 5);
 
   return (
     <div className={`grid gap-3 ${pending ? "opacity-60" : ""}`}>
       <p className="font-medium">{t.importFound(mapped.drafts.length)}</p>
+      {mapped.skipped > 0 && <p className="-mt-2 text-xs text-muted">{t.importSkipped(mapped.skipped)}</p>}
 
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
@@ -183,18 +200,18 @@ function Preview({
         </table>
       </div>
 
-      {mapped.drafts.length > first.length && (
-        <p className="text-xs text-muted">{t.importMore(mapped.drafts.length - first.length)}</p>
+      {mapped.fresh.length > first.length && (
+        <p className="text-xs text-muted">{t.importMore(mapped.fresh.length - first.length)}</p>
       )}
       {mapped.ignored.length > 0 && (
         <p className="text-xs text-muted">{t.importIgnored(mapped.ignored.join(", "))}</p>
       )}
-      {mapped.drafts.length > MAX_ROWS && <p className="text-xs text-warn">{t.importTooMany(MAX_ROWS)}</p>}
+      {mapped.fresh.length > MAX_ROWS && <p className="text-xs text-warn">{t.importTooMany(MAX_ROWS)}</p>}
 
       <button
         type="button"
         onClick={onSave}
-        disabled={pending}
+        disabled={pending || total === 0}
         className="w-fit rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
       >
         {t.importDo(total)}

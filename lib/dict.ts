@@ -93,6 +93,9 @@ export const dict = {
     importDone: (n: number): string =>
       n === 1 ? "Listo. 1 candidatura añadida." : `Listo. ${n} candidaturas añadidas.`,
     importFailed: "No se han podido importar. Vuelve a intentarlo.",
+    importSkipped: (n: number): string =>
+      n === 1 ? "1 ya la tenías y se salta." : `${n} ya las tenías y se saltan.`,
+    duplicate: "Ya tienes esa candidatura: misma empresa, mismo puesto y misma fecha.",
     exportCsv: "Exportar CSV",
     csvSalaryMin: "Salario mínimo",
     csvSalaryMax: "Salario máximo",
@@ -286,6 +289,9 @@ export const dict = {
     importDone: (n: number): string =>
       n === 1 ? "Done. 1 application added." : `Done. ${n} applications added.`,
     importFailed: "We couldn't import them. Try again.",
+    importSkipped: (n: number): string =>
+      n === 1 ? "1 you already had, skipped." : `${n} you already had, skipped.`,
+    duplicate: "You already have that one: same company, same role and same date.",
     exportCsv: "Export CSV",
     csvSalaryMin: "Minimum salary",
     csvSalaryMax: "Maximum salary",

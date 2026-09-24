@@ -12,3 +12,9 @@ export function groupBy<T extends Record<K, string>, K extends string>(rows: T[]
   }
   return [...groups.values()].sort((a, b) => b.length - a.length);
 }
+
+// Dos candidaturas son la misma si coinciden empresa, puesto y fecha, sin mirar tildes,
+// mayusculas ni espacios de sobra. Repetir empresa y puesto en otra fecha es normal:
+// mucha gente vuelve a aplicar meses despues.
+export const dupKey = (r: { company: string; role: string; applied_on: string }) =>
+  `${norm(r.company.trim())}|${norm(r.role.trim())}|${r.applied_on}`;

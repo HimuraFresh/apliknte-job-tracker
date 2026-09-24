@@ -289,7 +289,9 @@ export default function Panel({
       </header>
 
       {suggestOpen && <SuggestionPanel onClose={() => setSuggestOpen(false)} />}
-      {importOpen && <ImportPanel cvs={cvs} onClose={() => setImportOpen(false)} />}
+      {importOpen && (
+        <ImportPanel cvs={cvs} rows={rows} onClose={() => setImportOpen(false)} />
+      )}
       {cvsOpen && (
         <CvPanel
           cvs={cvs}
@@ -1234,7 +1236,7 @@ function ApplicationForm({
         start(async () => {
           const warning = await attachCv(fd);
           const res = initial ? await updateApplication(initial.id, fd) : await addApplication(fd);
-          if (res?.error) setError(res.error);
+          if (res?.error) setError(res.error === "duplicate" ? t.duplicate : res.error);
           else onDone(warning);
         })
       }
