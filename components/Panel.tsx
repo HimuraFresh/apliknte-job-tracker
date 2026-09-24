@@ -6,6 +6,7 @@ import { STATUSES, WORK_MODES, SOURCES, type Dict } from "@/lib/dict";
 import { money, toEuros } from "@/lib/money";
 import { daysSince, daysUntil, plusDays, today } from "@/lib/dates";
 import { groupBy, norm } from "@/lib/group";
+import { toCsv } from "@/lib/csv";
 import { COMPANIES } from "@/lib/companies";
 import {
   addApplication,
@@ -197,6 +198,52 @@ export default function Panel({
   );
   const selected = visible.find((r) => r.id === openId);
 
+  // Se arma aqui mismo con lo que ya esta en pantalla: no hace falta pedirle nada al
+  // servidor, y por lo tanto no hay forma de que salga nada que no sea tuyo.
+  function exportCsv() {
+    const label = (k: string) => (t[k as keyof Dict] as string) ?? k;
+    const csv = toCsv([
+      [
+        t.company,
+        t.role,
+        t.status,
+        t.workMode,
+        t.source,
+        t.csvSalaryMin,
+        t.csvSalaryMax,
+        t.appliedOn,
+        t.followUpOn,
+        t.csvContacted,
+        t.offer,
+        t.cvSent,
+        t.note,
+      ],
+      ...rows.map((r) => [
+        r.company,
+        r.role,
+        label(r.status),
+        r.work_mode ? label(r.work_mode) : "",
+        r.source ?? "",
+        r.salary_min ? String(r.salary_min) : "",
+        r.salary_max ? String(r.salary_max) : "",
+        r.applied_on,
+        r.follow_up_on ?? "",
+        r.followed_up ? t.yes : t.notYet,
+        r.url ?? "",
+        (r.cv_version_id && cvLabels.get(r.cv_version_id)) || "",
+        r.notes ?? "",
+      ]),
+    ]);
+
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `apliknte-${today()}.csv`;
+    a.click();
+    // Soltar el enlace en el mismo momento del clic corta la descarga en algunos navegadores.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
 
@@ -222,6 +269,7 @@ export default function Panel({
               setSuggestOpen(false);
               setCvsOpen(true);
             }}
+            onExport={exportCsv}
           />
         </div>
       </header>

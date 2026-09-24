@@ -16,9 +16,11 @@ const LANGS = [
 export default function AppMenu({
   onSuggest,
   onCvs,
+  onExport,
 }: {
   onSuggest: () => void;
   onCvs: () => void;
+  onExport: () => void;
 }) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
@@ -110,6 +112,17 @@ export default function AppMenu({
               className={item}
             >
               {t.myCvs}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onExport();
+              }}
+              className={item}
+            >
+              {t.exportCsv}
             </button>
 
             <a href="/ayuda" className={item}>
