@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <LangProvider locale={locale}>{children}</LangProvider>
         {/* Las letras pequenas de abajo: centradas en el movil, en la esquina en pantalla grande. */}
         <footer className="p-6 text-center text-xs text-muted sm:px-8 sm:text-right">
-          <a href="/privacidad" className="transition hover:text-foreground">
+          <a href="/privacidad" className="tap transition hover:text-foreground">
             {locale === "en" ? "Privacy" : "Privacidad"}
           </a>
         </footer>
