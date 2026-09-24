@@ -84,7 +84,12 @@ export default function CvPanel({
       )}
 
       {message && (
-        <p className={`text-sm ${message.ok ? "text-ok" : "text-bad"}`}>{message.text}</p>
+        <p
+          role={message.ok ? "status" : "alert"}
+          className={`text-sm ${message.ok ? "text-ok" : "text-bad"}`}
+        >
+          {message.text}
+        </p>
       )}
     </section>
   );

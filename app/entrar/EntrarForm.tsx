@@ -140,10 +140,12 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
         )}
 
         {linkError && !state.error && !state.message && (
-          <p className="mt-3 text-sm text-bad">{t.linkError}</p>
+          <p role="alert" className="mt-3 text-sm text-bad">
+            {t.linkError}
+          </p>
         )}
         {exists ? (
-          <div className="mt-3 grid gap-2 rounded-xl bg-bad/5 p-3 text-sm">
+          <div role="alert" className="mt-3 grid gap-2 rounded-xl bg-bad/5 p-3 text-sm">
             <p className="text-bad">{t.emailExists}</p>
             <button
               type="button"
@@ -154,16 +156,20 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             </button>
           </div>
         ) : (
-          state.error && <p className="mt-3 text-sm text-bad">{t.authError(state.error)}</p>
+          state.error && (
+            <p role="alert" className="mt-3 text-sm text-bad">
+              {t.authError(state.error)}
+            </p>
+          )
         )}
         {state.message === "checkEmail" && (
-          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
+          <p role="status" className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
             {t.checkEmail}
             <Inbox email={email} t={t} />
           </p>
         )}
         {state.message === "resetSent" && (
-          <p className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
+          <p role="status" className="mt-3 rounded-xl bg-ok/10 p-3 text-sm text-ok">
             {t.resetSent}
             <Inbox email={email} t={t} />
           </p>

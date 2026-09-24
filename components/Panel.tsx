@@ -390,7 +390,10 @@ export default function Panel({
       )}
 
       {warning && (
-        <div className="mt-4 flex items-start justify-between gap-3 rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm text-warn">
+        <div
+          role="status"
+          className="mt-4 flex items-start justify-between gap-3 rounded-2xl border border-warn/40 bg-warn/10 p-4 text-sm text-warn"
+        >
           <p>{warning}</p>
           <button onClick={() => setWarning(undefined)} aria-label={t.cancel} className="shrink-0">
             ✕
@@ -1268,7 +1271,11 @@ function ApplicationForm({
         </button>
       )}
 
-      {error && <p className="text-sm text-bad">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-bad">
+          {error}
+        </p>
+      )}
 
       <div className="flex gap-3">
         <button
