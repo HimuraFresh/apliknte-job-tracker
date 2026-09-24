@@ -83,7 +83,14 @@ export default function ImportPanel({
             onDrop={(e) => {
               e.preventDefault();
               setOver(false);
-              void readFile(e.dataTransfer.files[0]);
+              // Arrastrando desde Drive o desde otra pestaña no viene el archivo, viene un
+              // enlace: hay que decirlo, porque si no parece que la app no hace nada.
+              const file = e.dataTransfer.files[0];
+              if (file) return void readFile(file);
+              const text = e.dataTransfer.getData("text");
+              if (/^https?:\/\//.test(text.trim())) return setProblem(t.importLink);
+              if (text.trim()) return read(text);
+              setProblem(t.importNothing);
             }}
             className={`grid gap-2 rounded-xl border border-dashed p-5 text-center text-sm transition ${
               over ? "border-brand bg-brand-soft" : "border-border"

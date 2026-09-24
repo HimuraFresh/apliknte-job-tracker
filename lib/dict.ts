@@ -79,6 +79,8 @@ export const dict = {
     importXlsx:
       "Los archivos de Excel (.xlsx) no se pueden leer tal cual. En Excel: Archivo → Guardar como → CSV. En Sheets: Archivo → Descargar → CSV. O copia las celdas y pégalas abajo.",
     importTooBig: "El archivo es demasiado grande. El máximo son 2 MB.",
+    importLink:
+      "Eso es un enlace, no un archivo: arrastrando desde Drive el navegador no manda la hoja. Descárgala como CSV (Archivo → Descargar → CSV) o copia las celdas y pégalas abajo.",
     importNothing:
       "No hemos encontrado ninguna candidatura. Hacen falta dos columnas: una con la empresa y otra con el puesto.",
     importFound: (n: number): string =>
@@ -267,6 +269,8 @@ export const dict = {
     importXlsx:
       "Excel files (.xlsx) can't be read as they are. In Excel: File → Save as → CSV. In Sheets: File → Download → CSV. Or copy the cells and paste them below.",
     importTooBig: "That file is too big. The limit is 2 MB.",
+    importLink:
+      "That's a link, not a file: dragging from Drive, the browser doesn't send the sheet itself. Download it as CSV (File → Download → CSV) or copy the cells and paste them below.",
     importNothing:
       "We found no applications in there. You need two columns: one with the company and one with the role.",
     importFound: (n: number): string =>
