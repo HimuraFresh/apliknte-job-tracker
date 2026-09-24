@@ -28,7 +28,13 @@ columns at first, an unreadable endless scroll two months later.
   interviewing, follow-ups due) filter too.
 - **CVs as PDF**, tagged by type ("Data CV", "ATS CV"…), so you know which one
   you sent where.
-- **Edit and delete**, with a two-tap confirmation for deleting.
+- **Bring your spreadsheet over.** Drop a CSV, pick one, or paste the cells
+  straight from Excel or Sheets. Columns are recognised whatever they're called,
+  values and dates are translated, and nothing is saved until you approve the
+  preview. Applications you already have are skipped.
+- **Export everything to CSV**, ready for Excel or Sheets.
+- **Edit and delete**, with a two-tap confirmation. You can also select several
+  applications and delete them in one go.
 - **Install it on your phone (PWA).** No store and no download: install it
   from the browser and it gets its own icon and runs full screen.
 - **Spanish and English, light and dark mode.**
@@ -94,7 +100,8 @@ You need Node.js 20+ and a free Supabase project.
    npm run dev
    ```
 
-Dates, password rules, grouping and salary conversion are covered by
+Dates, password rules, grouping, salary conversion and the spreadsheet importer
+(separators, quotes, dd/mm vs mm/dd dates, column matching) are covered by
 automated tests: `npm test`.
 
 ## Roadmap
@@ -106,7 +113,7 @@ automated tests: `npm test`.
 - [x] Expandable cards and notes
 - [x] Installable mobile app (PWA)
 - [x] Accessibility pass, help page, privacy policy and account deletion
-- [ ] CSV import and export
+- [x] Import from Excel, Sheets or CSV, and export to CSV
 
 Feedback, issues and pull requests are very welcome.
 
@@ -147,7 +154,13 @@ nadie entiende a los dos meses.
   filtran.
 - **CVs en PDF** con su tipo ("CV Data", "CV ATS"…), para saber cuál enviaste
   a cada sitio.
-- **Editar y borrar**, con confirmación en dos toques para borrar.
+- **Trae tu hoja de cálculo.** Arrastra un CSV, elígelo, o pega las celdas
+  directamente desde Excel o Sheets. Reconoce las columnas se llamen como se
+  llamen, traduce los valores y las fechas, y no guarda nada hasta que apruebas
+  la vista previa. Las que ya tienes se saltan.
+- **Exporta todo a CSV**, listo para Excel o Sheets.
+- **Editar y borrar**, con confirmación en dos toques. También puedes
+  seleccionar varias candidaturas y borrarlas de golpe.
 - **Instálala en el móvil (PWA).** Sin tiendas y sin descargas: se instala
   desde el navegador, se queda con su icono y se abre a pantalla completa.
 - **Español e inglés, modo claro y oscuro.**
@@ -214,8 +227,10 @@ Necesitas Node.js 20 o superior y un proyecto gratuito de Supabase.
    npm run dev
    ```
 
-Las fechas, las reglas de contraseña, la agrupación y la conversión de sueldos
-están cubiertas por tests automáticos: `npm test`.
+Las fechas, las reglas de contraseña, la agrupación, la conversión de sueldos y
+el importador de hojas de cálculo (separadores, comillas, fechas dd/mm frente a
+mm/dd, reconocimiento de columnas) están cubiertos por tests automáticos:
+`npm test`.
 
 ### Hoja de ruta
 
@@ -226,7 +241,7 @@ están cubiertas por tests automáticos: `npm test`.
 - [x] Fichas desplegables y notas
 - [x] App instalable en el móvil (PWA)
 - [x] Repaso de accesibilidad, ayuda, privacidad y borrado de cuenta
-- [ ] Importar y exportar CSV
+- [x] Importar desde Excel, Sheets o CSV, y exportar a CSV
 
 Cualquier crítica, sugerencia, issue o pull request es bienvenida.
 
