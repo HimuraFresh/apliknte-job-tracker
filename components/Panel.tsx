@@ -197,7 +197,6 @@ export default function Panel({
   const companies = [...new Set(rows.map((r) => r.company))];
   const roles = [...new Set(rows.map((r) => r.role))];
 
-
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-5 sm:p-8 lg:max-w-5xl">
       <header className="flex items-center justify-between gap-4">
@@ -334,7 +333,9 @@ export default function Panel({
                 aria-pressed={view === v}
                 onClick={() => setView(v)}
                 className={`tap rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                  view === v ? "bg-surface text-foreground shadow-sm" : "text-muted hover:text-foreground"
+                  view === v
+                    ? "bg-surface text-foreground shadow-sm"
+                    : "text-muted hover:text-foreground"
                 }`}
               >
                 {label}
@@ -371,7 +372,9 @@ export default function Panel({
           ))}
           {/* Cuantas quedan con la busqueda y los filtros de ahora */}
           {visible.length !== rows.length && (
-            <span className="ml-auto text-xs text-muted">{t.shown(visible.length, rows.length)}</span>
+            <span className="ml-auto text-xs text-muted">
+              {t.shown(visible.length, rows.length)}
+            </span>
           )}
         </div>
       )}
@@ -409,82 +412,82 @@ export default function Panel({
           la lista, y los detalles se abren dentro de la propia ficha. */}
       {!showForm && (
         <div className="mt-4 lg:flex lg:items-start lg:gap-4">
-        <section className="grid gap-3 lg:min-w-0 lg:flex-1">
-          {rows.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-              {t.empty}
-            </p>
-          )}
-
-          {rows.length > 0 && visible.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-              {q ? t.noResults(query.trim()) : t.noMatches}
-            </p>
-          )}
-
-          {view === "list"
-            ? visible.map((r) => (
-                <Card
-                  key={r.id}
-                  r={r}
-                  t={t}
-                  locale={locale}
-                  cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
-                  open={openId === r.id}
-                  onToggle={() => setOpenId(openId === r.id ? null : r.id)}
-                  onEdit={() => {
-                    setWarning(undefined);
-                    setEditing(r);
-                  }}
-                />
-              ))
-            : groupBy(visible, view).map((g) => (
-                <Group
-                  key={norm(g[0][view].trim())}
-                  rows={g}
-                  by={view}
-                  t={t}
-                  onPick={() => {
-                    setOnly({ by: view, name: g[0][view] });
-                    setView("list");
-                  }}
-                />
-              ))}
-        </section>
-
-        {view === "list" && rows.length > 0 && (
-          <aside className="sticky top-6 hidden w-[22rem] shrink-0 lg:block">
-            {selected ? (
-              <div className="rounded-2xl border border-border bg-surface p-4">
-                <h2 className="font-medium">{selected.role}</h2>
-                <p className="break-words text-sm text-muted">
-                  {selected.company}{" "}
-                  <span className="whitespace-nowrap">
-                    · {t.daysAgo(daysSince(selected.applied_on))}
-                  </span>
-                </p>
-                <div className="mt-3 border-t border-border pt-3">
-                  <Details
-                    r={selected}
-                    t={t}
-                    locale={locale}
-                    cvLabel={
-                      selected.cv_version_id ? cvLabels.get(selected.cv_version_id) : undefined
-                    }
-                    onEdit={() => {
-                      setWarning(undefined);
-                      setEditing(selected);
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
-                {t.pickOne}
+          <section className="grid gap-3 lg:min-w-0 lg:flex-1">
+            {rows.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
+                {t.empty}
               </p>
             )}
-          </aside>
-        )}
+
+            {rows.length > 0 && visible.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
+                {q ? t.noResults(query.trim()) : t.noMatches}
+              </p>
+            )}
+
+            {view === "list"
+              ? visible.map((r) => (
+                  <Card
+                    key={r.id}
+                    r={r}
+                    t={t}
+                    locale={locale}
+                    cvLabel={r.cv_version_id ? cvLabels.get(r.cv_version_id) : undefined}
+                    open={openId === r.id}
+                    onToggle={() => setOpenId(openId === r.id ? null : r.id)}
+                    onEdit={() => {
+                      setWarning(undefined);
+                      setEditing(r);
+                    }}
+                  />
+                ))
+              : groupBy(visible, view).map((g) => (
+                  <Group
+                    key={norm(g[0][view].trim())}
+                    rows={g}
+                    by={view}
+                    t={t}
+                    onPick={() => {
+                      setOnly({ by: view, name: g[0][view] });
+                      setView("list");
+                    }}
+                  />
+                ))}
+          </section>
+
+          {view === "list" && rows.length > 0 && (
+            <aside className="sticky top-6 hidden w-[22rem] shrink-0 lg:block">
+              {selected ? (
+                <div className="rounded-2xl border border-border bg-surface p-4">
+                  <h2 className="font-medium">{selected.role}</h2>
+                  <p className="break-words text-sm text-muted">
+                    {selected.company}{" "}
+                    <span className="whitespace-nowrap">
+                      · {t.daysAgo(daysSince(selected.applied_on))}
+                    </span>
+                  </p>
+                  <div className="mt-3 border-t border-border pt-3">
+                    <Details
+                      r={selected}
+                      t={t}
+                      locale={locale}
+                      cvLabel={
+                        selected.cv_version_id ? cvLabels.get(selected.cv_version_id) : undefined
+                      }
+                      onEdit={() => {
+                        setWarning(undefined);
+                        setEditing(selected);
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted">
+                  {t.pickOne}
+                </p>
+              )}
+            </aside>
+          )}
         </div>
       )}
     </main>
@@ -510,7 +513,9 @@ function Tile({
       onClick={onClick}
       aria-pressed={on}
       className={`rounded-2xl border px-4 py-3 text-left transition ${
-        on ? "border-brand bg-brand-soft ring-1 ring-brand" : "border-border bg-surface hover:border-brand"
+        on
+          ? "border-brand bg-brand-soft ring-1 ring-brand"
+          : "border-border bg-surface hover:border-brand"
       }`}
     >
       <p className={`text-2xl font-semibold ${tone}`}>{n}</p>
@@ -730,115 +735,111 @@ function Details({
   const hasDetails = r.work_mode || r.source || salary || r.url || cvLabel;
 
   return (
-    <>
-      <div className={`grid gap-4 ${pending ? "opacity-60" : ""}`}>
-          {hasDetails && (
-            <div className="grid grid-cols-2 gap-x-5">
-              <dl className="grid content-start gap-3">
-                {r.work_mode && (
-                  <Detail label={t.workMode}>{t[r.work_mode as keyof Dict] as string}</Detail>
-                )}
-                {r.source && <Detail label={t.source}>{r.source}</Detail>}
-                {salary && <Detail label={t.salaryShort}>{salary}</Detail>}
-              </dl>
-              <dl className="grid content-start gap-3">
-                {r.url && (
-                  <Detail label={t.offer}>
-                    <a
-                      href={r.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-brand hover:underline"
-                    >
-                      {t.viewOffer} ↗
-                    </a>
-                  </Detail>
-                )}
-                {cvLabel && (
-                  <Detail label={t.cvSent}>
-                    <a
-                      href={`/cv/${r.cv_version_id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-brand hover:underline"
-                    >
-                      {cvLabel} ↗
-                    </a>
-                  </Detail>
-                )}
-              </dl>
-            </div>
-          )}
+    <div className={`grid gap-4 ${pending ? "opacity-60" : ""}`}>
+      {hasDetails && (
+        <div className="grid grid-cols-2 gap-x-5">
+          <dl className="grid content-start gap-3">
+            {r.work_mode && (
+              <Detail label={t.workMode}>{t[r.work_mode as keyof Dict] as string}</Detail>
+            )}
+            {r.source && <Detail label={t.source}>{r.source}</Detail>}
+            {salary && <Detail label={t.salaryShort}>{salary}</Detail>}
+          </dl>
+          <dl className="grid content-start gap-3">
+            {r.url && (
+              <Detail label={t.offer}>
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand hover:underline"
+                >
+                  {t.viewOffer} ↗
+                </a>
+              </Detail>
+            )}
+            {cvLabel && (
+              <Detail label={t.cvSent}>
+                <a
+                  href={`/cv/${r.cv_version_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand hover:underline"
+                >
+                  {cvLabel} ↗
+                </a>
+              </Detail>
+            )}
+          </dl>
+        </div>
+      )}
 
-          {r.notes && (
-            <div className="rounded-xl bg-background p-3">
-              <p className="text-xs text-muted">{t.note}</p>
-              <p className="whitespace-pre-wrap break-words text-sm">{r.notes}</p>
-            </div>
-          )}
+      {r.notes && (
+        <div className="rounded-xl bg-background p-3">
+          <p className="text-xs text-muted">{t.note}</p>
+          <p className="whitespace-pre-wrap break-words text-sm">{r.notes}</p>
+        </div>
+      )}
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted">{t.notContacted}</span>
-              <button
-                type="button"
-                onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
-                className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
-                  r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
-                }`}
-              >
-                {r.followed_up ? `✓ ${t.yes}` : t.yes}
-              </button>
-              <button
-                type="button"
-                onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
-                className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
-                  !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
-                }`}
-              >
-                {t.notYet}
-              </button>
-            </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted">{t.notContacted}</span>
+          <button
+            type="button"
+            onClick={() => !r.followed_up && run(() => setFollowedUp(r.id, true))}
+            className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+              r.followed_up ? "bg-ok text-on-solid" : "border border-border text-muted"
+            }`}
+          >
+            {r.followed_up ? `✓ ${t.yes}` : t.yes}
+          </button>
+          <button
+            type="button"
+            onClick={() => r.followed_up && run(() => setFollowedUp(r.id, false))}
+            className={`tap rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-80 ${
+              !r.followed_up ? "bg-muted/20 text-foreground" : "border border-border text-muted"
+            }`}
+          >
+            {t.notYet}
+          </button>
+        </div>
 
-            <div className="flex items-center gap-3">
-              {!overdue &&
-                !r.followed_up &&
-                !CLOSED.includes(r.status) &&
-                (r.follow_up_on ? (
-                  <span className="text-xs text-muted">{t.followUpSoon(daysToFollowUp)}</span>
-                ) : (
-                  <span className="text-xs text-muted">
-                    {t.followUpOff}{" "}
-                    <button
-                      type="button"
-                      onClick={() => run(() => setFollowUp(r.id, plusDays(today(), 15)))}
-                      className="tap text-brand transition hover:underline"
-                    >
-                      {t.followUpBack}
-                    </button>
-                  </span>
-                ))}
-              <button
-                type="button"
-                onClick={onEdit}
-                className="tap py-1 text-xs text-muted transition hover:text-foreground"
-              >
-                {t.edit}
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  confirming ? run(() => deleteApplication(r.id)) : setConfirming(true)
-                }
-                onBlur={() => setConfirming(false)}
-                className={`tap py-1 text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
-              >
-                {confirming ? t.confirmDelete : t.delete}
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          {!overdue &&
+            !r.followed_up &&
+            !CLOSED.includes(r.status) &&
+            (r.follow_up_on ? (
+              <span className="text-xs text-muted">{t.followUpSoon(daysToFollowUp)}</span>
+            ) : (
+              <span className="text-xs text-muted">
+                {t.followUpOff}{" "}
+                <button
+                  type="button"
+                  onClick={() => run(() => setFollowUp(r.id, plusDays(today(), 15)))}
+                  className="tap text-brand transition hover:underline"
+                >
+                  {t.followUpBack}
+                </button>
+              </span>
+            ))}
+          <button
+            type="button"
+            onClick={onEdit}
+            className="tap py-1 text-xs text-muted transition hover:text-foreground"
+          >
+            {t.edit}
+          </button>
+          <button
+            type="button"
+            onClick={() => (confirming ? run(() => deleteApplication(r.id)) : setConfirming(true))}
+            onBlur={() => setConfirming(false)}
+            className={`tap py-1 text-xs transition ${confirming ? "font-medium text-bad" : "text-muted hover:text-bad"}`}
+          >
+            {confirming ? t.confirmDelete : t.delete}
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 

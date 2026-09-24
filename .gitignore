@@ -43,3 +43,6 @@ next-env.d.ts
 
 # configuracion de Claude Code propia de cada maquina (rutas locales)
 .claude/settings.local.json
+
+# mapa del codigo que genera graphify: se regenera solo, no va al repo
+/graphify-out/
