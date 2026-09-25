@@ -12,22 +12,33 @@ const RULES: { key: PasswordRule; label: "ruleLength" | "ruleUpper" | "ruleLower
   { key: "symbol", label: "ruleSymbol" },
 ];
 
-// Contrasena con boton "Mostrar". Con checklist, los requisitos se marcan mientras
-// escribes (al crear cuenta o cambiarla; al entrar no hace falta).
+// Contrasena con boton "Mostrar". Al elegir una nueva (crear cuenta o recuperarla) salen
+// los requisitos marcandose mientras escribes y una segunda casilla para repetirla: con
+// una sola, un dedo torpe te deja fuera de tu propia cuenta sin que nadie se entere. Al
+// entrar no sale ninguna de las dos cosas, que ahi la contrasena ya la tienes.
 export default function PasswordField({
   value,
   onChange,
-  checklist = false,
+  confirm = "",
+  onConfirm,
   autoComplete,
 }: {
   value: string;
   onChange: (value: string) => void;
-  checklist?: boolean;
+  confirm?: string;
+  onConfirm?: (value: string) => void;
   autoComplete: "current-password" | "new-password";
 }) {
   const { t } = useLang();
   const [visible, setVisible] = useState(false);
   const rules = passwordRules(value);
+  // Los requisitos y la casilla de repetir van juntos: hacen falta en los mismos dos sitios.
+  const isNew = autoComplete === "new-password";
+  const match = confirm !== "" && confirm === value;
+
+  const box = "w-full rounded-xl border border-border bg-surface py-3 pl-4 outline-none focus:border-brand";
+  // Sin esto el movil pone mayusculas o autocorrige la contrasena al verla.
+  const plain = { autoCapitalize: "none", autoCorrect: "off", spellCheck: false } as const;
 
   return (
     <div className="grid gap-2">
@@ -41,11 +52,8 @@ export default function PasswordField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={t.password}
           autoComplete={autoComplete}
-          // Sin esto el movil pone mayusculas o autocorrige la contrasena al verla.
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className="w-full rounded-xl border border-border bg-surface py-3 pl-4 pr-24 outline-none focus:border-brand"
+          {...plain}
+          className={`${box} pr-24`}
         />
         <button
           type="button"
@@ -56,18 +64,35 @@ export default function PasswordField({
         </button>
       </div>
 
-      {checklist && (
-        <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-          {RULES.map(({ key, label }) => (
-            <li
-              key={key}
-              // el del simbolo es el mas largo: ocupa la fila entera para no partirse
-              className={`${rules[key] ? "text-ok" : "text-muted"} ${key === "symbol" ? "col-span-2" : ""}`}
-            >
-              {rules[key] ? "✓" : "○"} {t[label]}
-            </li>
-          ))}
-        </ul>
+      {isNew && (
+        <>
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+            {RULES.map(({ key, label }) => (
+              <li
+                key={key}
+                // el del simbolo es el mas largo: ocupa la fila entera para no partirse
+                className={`${rules[key] ? "text-ok" : "text-muted"} ${key === "symbol" ? "col-span-2" : ""}`}
+              >
+                {rules[key] ? "✓" : "○"} {t[label]}
+              </li>
+            ))}
+          </ul>
+
+          <input
+            name="password2"
+            type={visible ? "text" : "password"}
+            required
+            value={confirm}
+            onChange={(e) => onConfirm?.(e.target.value)}
+            placeholder={t.repeatPassword}
+            autoComplete="new-password"
+            {...plain}
+            className={`${box} pr-4`}
+          />
+          <p className={`text-xs ${match ? "text-ok" : "text-muted"}`}>
+            {match ? "✓" : "○"} {t.ruleMatch}
+          </p>
+        </>
       )}
     </div>
   );

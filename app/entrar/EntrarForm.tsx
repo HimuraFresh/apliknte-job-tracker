@@ -31,6 +31,7 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
   const { t, locale } = useLang();
   const [mode, setMode] = useState<"in" | "up" | "reset">("in");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [email, setEmail] = useState("");
   // Un useActionState por pestaña, cada uno con su accion fija. Con uno solo cambiando de
   // accion, React no se entera al volver a la primera: tras pasar por "Crear cuenta",
@@ -42,8 +43,9 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
   };
   const [state, action, pending] = forms[mode];
   const exists = ["user_already_exists", "email_exists"].includes(state.error ?? "");
-  // Al crear cuenta no se envia nada hasta cumplir los requisitos: no gasta intentos ni correos.
-  const blocked = mode === "up" && !passwordOk(password);
+  // Al crear cuenta no se envia nada hasta cumplir los requisitos y hasta que las dos
+  // contrasenas coincidan: no gasta intentos ni correos, y no te registra con un dedazo.
+  const blocked = mode === "up" && (!passwordOk(password) || password !== confirm);
 
   const tab = (active: boolean) =>
     `flex-1 rounded-lg py-2.5 text-sm font-medium transition ${
@@ -110,7 +112,8 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             <PasswordField
               value={password}
               onChange={setPassword}
-              checklist={mode === "up"}
+              confirm={confirm}
+              onConfirm={setConfirm}
               autoComplete={mode === "in" ? "current-password" : "new-password"}
             />
           )}

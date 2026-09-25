@@ -37,6 +37,8 @@ export const dict = {
     ruleUpper: "una mayúscula",
     ruleDigit: "un número",
     ruleSymbol: "un símbolo, como ! ? / . @ #",
+    repeatPassword: "Repite la contraseña",
+    ruleMatch: "Las dos coinciden",
     showPassword: "Mostrar",
     hidePassword: "Ocultar",
     authError: (code: string) =>
@@ -236,6 +238,8 @@ export const dict = {
     ruleUpper: "an uppercase letter",
     ruleDigit: "a number",
     ruleSymbol: "a symbol, like ! ? / . @ #",
+    repeatPassword: "Repeat your password",
+    ruleMatch: "Both match",
     showPassword: "Show",
     hidePassword: "Hide",
     authError: (code: string) =>

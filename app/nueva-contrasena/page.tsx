@@ -11,6 +11,7 @@ export default function NuevaContrasenaPage() {
   const { t } = useLang();
   const [state, action, pending] = useActionState(updatePassword, {});
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
   return (
     <main className="flex-1 grid place-items-center p-6">
@@ -21,11 +22,12 @@ export default function NuevaContrasenaPage() {
           <PasswordField
             value={password}
             onChange={setPassword}
-            checklist
+            confirm={confirm}
+            onConfirm={setConfirm}
             autoComplete="new-password"
           />
           <button
-            disabled={pending || !passwordOk(password)}
+            disabled={pending || !passwordOk(password) || password !== confirm}
             className="rounded-xl bg-brand px-4 py-3 font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
           >
             {t.savePassword}
