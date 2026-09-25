@@ -1,9 +1,7 @@
 "use client";
 
-import { useId, useState, useTransition } from "react";
+import { useId, useState } from "react";
 import { useLang, setLocale, setTheme } from "@/lib/lang";
-import { signOut } from "@/app/entrar/actions";
-import { deleteAccount } from "@/app/panel/actions";
 import Flag from "@/components/Flag";
 import Install from "@/components/Install";
 
@@ -12,23 +10,20 @@ const LANGS = [
   { code: "en", label: "English" },
 ] as const;
 
-// Menu de la cabecera: idioma, modo oscuro, sugerencias y cerrar sesion.
+// Menu de la cabecera: los ajustes de la aplicacion. Lo que es de tu cuenta (los CV,
+// cerrar sesion y borrarla) vive en el circulo del avatar, al lado.
 export default function AppMenu({
   onSuggest,
-  onCvs,
   onExport,
   onImport,
 }: {
   onSuggest: () => void;
-  onCvs: () => void;
   onExport: () => void;
   onImport: () => void;
 }) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
-  const [killing, setKilling] = useState(false);
-  const [pending, start] = useTransition();
   const menuId = useId();
 
   const toggle = () => {
@@ -109,17 +104,6 @@ export default function AppMenu({
               type="button"
               onClick={() => {
                 setOpen(false);
-                onCvs();
-              }}
-              className={item}
-            >
-              {t.myCvs}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
                 onImport();
               }}
               className={item}
@@ -154,43 +138,6 @@ export default function AppMenu({
             </button>
 
             <Install className={item} />
-
-            <div className="my-1 border-t border-border" />
-            <form action={signOut}>
-              <button className={`${item} text-bad hover:bg-bad/10`}>{t.signOut}</button>
-            </form>
-
-            {/* Apagado y sin color hasta que lo tocas: no es algo que se pulse sin querer. */}
-            {killing ? (
-              <div className="grid gap-2 rounded-xl bg-bad/5 p-3">
-                <p className="text-sm text-bad">{t.deleteAccountWarning}</p>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => start(() => void deleteAccount())}
-                    className="rounded-lg bg-bad px-3 py-1.5 text-xs font-medium text-on-solid transition hover:opacity-90 disabled:opacity-50"
-                  >
-                    {t.deleteAccountConfirm}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setKilling(false)}
-                    className="tap px-2 text-xs text-muted transition hover:text-foreground"
-                  >
-                    {t.cancel}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setKilling(true)}
-                className={`${item} text-muted hover:bg-bad/10 hover:text-bad`}
-              >
-                {t.deleteAccount}
-              </button>
-            )}
           </div>
         </>
       )}

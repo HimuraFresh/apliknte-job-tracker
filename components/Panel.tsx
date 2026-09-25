@@ -269,18 +269,21 @@ export default function Panel({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Profile email={email} avatar={avatar} />
+          <Profile
+            email={email}
+            avatar={avatar}
+            onCvs={() => {
+              setSuggestOpen(false);
+              setImportOpen(false);
+              setCvsOpen(true);
+            }}
+          />
           <Refresh />
           <AppMenu
             onSuggest={() => {
               setCvsOpen(false);
               setImportOpen(false);
               setSuggestOpen(true);
-            }}
-            onCvs={() => {
-              setSuggestOpen(false);
-              setImportOpen(false);
-              setCvsOpen(true);
             }}
             onExport={exportCsv}
             onImport={() => {
