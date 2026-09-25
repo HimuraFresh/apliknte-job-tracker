@@ -1,6 +1,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { title } from "@/lib/title";
 import Panel, { type Application, type Cv } from "@/components/Panel";
+import { AVATARS, avatarFor } from "@/components/Avatar";
 
 export const generateMetadata = () => title("Candidaturas", "Applications");
 
@@ -29,11 +30,21 @@ export default async function PanelPage() {
     );
   }
 
+  // El avatar vive en la cuenta, junto al idioma. Quien no ha elegido tiene uno igual,
+  // siempre el mismo, sacado de su correo.
+  const elegido = auth.user?.user_metadata?.avatar;
+  const avatar =
+    Number.isInteger(elegido) && elegido >= 0 && elegido < AVATARS
+      ? (elegido as number)
+      : avatarFor(auth.user?.email ?? "");
+
   return (
     <Panel
       rows={(rows ?? []) as Application[]}
       cvs={(cvs ?? []) as Cv[]}
       userId={auth.user?.id ?? ""}
+      email={auth.user?.email ?? ""}
+      avatar={avatar}
     />
   );
 }

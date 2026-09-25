@@ -7,6 +7,7 @@ import { toEuros } from "@/lib/money";
 import { plusDays, today } from "@/lib/dates";
 import { dupKey } from "@/lib/group";
 import { STATUSES, WORK_MODES, SOURCES } from "@/lib/dict";
+import { AVATARS } from "@/components/Avatar";
 
 type Supabase = Awaited<ReturnType<typeof supabaseServer>>;
 
@@ -313,6 +314,21 @@ export async function deleteApplications(ids: unknown) {
   if (limpios.length === 0) return { error: "required" };
 
   const { error } = await supabase.from("applications").delete().in("id", limpios);
+  if (error) return { error: error.message };
+
+  revalidatePath("/panel");
+  return {};
+}
+
+// El avatar elegido se guarda en la propia cuenta, junto al idioma: ni tabla nueva ni
+// permisos nuevos. Solo vale un numero de la lista; cualquier otra cosa se ignora.
+export async function setAvatar(id: unknown) {
+  const supabase = await supabaseServer();
+  if (!Number.isInteger(id) || (id as number) < 0 || (id as number) >= AVATARS) {
+    return { error: "required" };
+  }
+
+  const { error } = await supabase.auth.updateUser({ data: { avatar: id } });
   if (error) return { error: error.message };
 
   revalidatePath("/panel");

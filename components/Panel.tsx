@@ -20,6 +20,7 @@ import {
 import Logo from "@/components/Logo";
 import SuggestionPanel from "@/components/SuggestionPanel";
 import AppMenu from "@/components/AppMenu";
+import Profile from "@/components/Profile";
 import Refresh from "@/components/Refresh";
 import CvPanel, { MAX_CV_BYTES } from "@/components/CvPanel";
 import ImportPanel from "@/components/ImportPanel";
@@ -92,10 +93,14 @@ export default function Panel({
   rows,
   cvs,
   userId,
+  email,
+  avatar,
 }: {
   rows: Application[];
   cvs: Cv[];
   userId: string;
+  email: string;
+  avatar: number;
 }) {
   const { t, locale } = useLang();
   const [open, setOpen] = useState(false);
@@ -264,6 +269,7 @@ export default function Panel({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Profile email={email} avatar={avatar} />
           <Refresh />
           <AppMenu
             onSuggest={() => {
