@@ -128,6 +128,46 @@ export default function Inicio() {
           </article>
         ))}
       </section>
+
+      {/* El cierre: el mismo boton de arriba, para quien ha bajado leyendo y ya no lo
+          tiene a mano, y los enlaces que uno busca antes de registrarse en algo. */}
+      <section className="mx-auto w-full max-w-5xl px-6 pb-20 pt-4 sm:px-8 sm:pb-28">
+        <div className="rounded-3xl border border-border bg-surface px-6 py-12 text-center sm:px-12 sm:py-16">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Empieza por las que ya tienes apuntadas
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
+            Crear la cuenta lleva un minuto y traer tu hoja de cálculo, otro. No hay nada
+            que pagar ni que configurar.
+          </p>
+          <Link
+            href="/entrar"
+            className="mt-8 inline-block rounded-xl bg-brand px-6 py-3.5 text-base font-medium text-on-solid transition hover:opacity-90"
+          >
+            Crear cuenta gratis
+          </Link>
+          <p className="mt-6 text-sm text-muted">
+            Tus datos en servidores europeos · Puedes borrar tu cuenta entera cuando quieras
+          </p>
+        </div>
+
+        <nav className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-muted">
+          <Link href="/ayuda" className="tap transition hover:text-foreground">
+            Ayuda
+          </Link>
+          <Link href="/privacidad" className="tap transition hover:text-foreground">
+            Privacidad
+          </Link>
+          <a
+            href="https://github.com/HimuraFresh/apliknte-job-tracker"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="tap transition hover:text-foreground"
+          >
+            El código, en GitHub
+          </a>
+        </nav>
+      </section>
     </main>
   );
 }
