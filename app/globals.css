@@ -89,3 +89,34 @@ body {
 :root:not([data-theme="dark"]) .solo-oscuro {
   display: none;
 }
+
+/* La portada se presenta al cargar: el titular se abre en dos, y la pantalla de la app
+   sube y crece hasta su sitio. Una vez, nunca en bucle. Con "reducir movimiento"
+   activado no se mueve nada, de eso ya se encarga la regla de mas arriba. */
+@keyframes sube {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes baja {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+@keyframes crece {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.985);
+  }
+}
+.sube {
+  animation: sube 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+.baja {
+  animation: baja 0.6s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
+.crece {
+  animation: crece 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+}
