@@ -24,10 +24,9 @@ const BLOQUES = [
       "A los quince días la ficha te lo dice sola. Y si con esa empresa no hay a quién escribir, lo aplazas o lo apagas: la que no quieres seguir deja de darte la lata.",
     src: "/bloque-aviso.webp",
     oscuro: "/bloque-aviso-oscuro.webp",
-    alt: "Una candidatura con el aviso: deberías haber contactado hace un día",
-    ancho: 820,
-    alto: 123,
-    aire: true,
+    alt: "Tres candidaturas en la lista, una de ellas avisando de que deberías haber contactado hace un día",
+    ancho: 896,
+    alto: 628,
   },
   {
     guia: "Empezar",
@@ -133,11 +132,7 @@ export default function Inicio() {
               <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">{b.titulo}</h2>
               <p className="mt-4 text-lg leading-relaxed text-muted">{b.texto}</p>
             </div>
-            <figure
-              className={`m-0 overflow-hidden rounded-2xl border border-border shadow-lg ${
-                b.aire ? "bg-background p-6 sm:p-10" : "bg-surface"
-              }`}
-            >
+            <figure className="m-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-lg">
               {[b.src, b.oscuro].map((src, n) => (
                 <Image
                   key={src}
@@ -146,7 +141,7 @@ export default function Inicio() {
                   width={b.ancho}
                   height={b.alto}
                   aria-hidden={n === 1}
-                  className={`w-full ${n === 0 ? "solo-claro" : "solo-oscuro"} ${b.aire ? "rounded-xl" : ""}`}
+                  className={`w-full ${n === 0 ? "solo-claro" : "solo-oscuro"}`}
                 />
               ))}
             </figure>
