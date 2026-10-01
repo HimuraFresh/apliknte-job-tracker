@@ -5,6 +5,7 @@ import { signIn, signUp, requestPasswordReset } from "./actions";
 import { useLang, setLocale } from "@/lib/lang";
 import Logo from "@/components/Logo";
 import Flag from "@/components/Flag";
+import Refresh from "@/components/Refresh";
 import PasswordField from "@/components/PasswordField";
 import { passwordOk } from "@/lib/password";
 import type { Dict } from "@/lib/dict";
@@ -64,7 +65,9 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             </h1>
             <p className="mt-1 text-muted">{t.tagline}</p>
           </div>
-          <div className="flex overflow-hidden rounded-lg border border-border text-xs">
+          <div className="flex items-center gap-2">
+            <Refresh />
+            <div className="flex overflow-hidden rounded-lg border border-border text-xs">
             {(["es", "en"] as const).map((l) => (
               <button
                 key={l}
@@ -77,7 +80,8 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
                 <Flag code={l} />
                 {l.toUpperCase()}
               </button>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
