@@ -112,11 +112,11 @@ body {
   }
 }
 .sube {
-  animation: sube 0.75s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation: sube 0.65s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
 .baja {
-  animation: baja 0.75s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation: baja 0.65s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
 .crece {
-  animation: crece 1.6s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
+  animation: crece 1s cubic-bezier(0.2, 0.7, 0.3, 1) backwards;
 }
