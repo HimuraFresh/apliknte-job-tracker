@@ -6,6 +6,7 @@ import { useLang, setLocale } from "@/lib/lang";
 import Logo from "@/components/Logo";
 import Flag from "@/components/Flag";
 import PasswordField from "@/components/PasswordField";
+import Vistazo from "@/components/Vistazo";
 import { passwordOk } from "@/lib/password";
 import type { Dict } from "@/lib/dict";
 
@@ -80,6 +81,10 @@ export default function EntrarForm({ linkError }: { linkError: boolean }) {
             ))}
           </div>
         </div>
+
+        {/* Un vistazo a lo que hace la app, que si no esto es un formulario a secas.
+            En "he olvidado la contrasena" sobra: ahi se viene a resolver, no a mirar. */}
+        {mode !== "reset" && <Vistazo />}
 
         {mode === "reset" ? (
           <div>
