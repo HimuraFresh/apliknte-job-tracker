@@ -82,12 +82,3 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
-
-/* Los tres cuadros de la pantalla de entrar: entran una vez y se quedan quietos.
-   Con "reducir movimiento" no se mueven, que de eso ya se encarga la regla de arriba. */
-@keyframes vistazo {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
