@@ -6,10 +6,11 @@ import { useLang } from "@/lib/lang";
 // Las letras pequenas de abajo. Mismo ancho que el panel para que en pantalla grande
 // queden bajo el borde derecho de las fichas y no perdidas en la esquina de la ventana.
 // En el movil, centradas y despegadas de la barra del iPhone.
-// En la portada no sale: esa pagina ya lleva sus propios enlaces, y salian dos veces.
+// En la portada no sale: ya lleva sus propios enlaces y Privacidad salia dos veces.
 export default function PieLegal() {
   const { t } = useLang();
-  if (usePathname() === "/inicio") return null;
+  // La portada vive en la raiz y ya lleva sus propios enlaces abajo.
+  if (usePathname() === "/") return null;
 
   return (
     <footer className="mx-auto w-full max-w-3xl p-6 pb-12 text-center text-xs text-muted sm:px-8 sm:pb-6 sm:text-right lg:max-w-5xl">
