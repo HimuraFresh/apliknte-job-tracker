@@ -82,3 +82,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+/* Las capturas de la portada van en dos versiones, clara y oscura: una captura del
+   tema claro sobre fondo negro parece un agujero de luz. Se enseña la que toca. */
+:root[data-theme="dark"] .solo-claro,
+:root:not([data-theme="dark"]) .solo-oscuro {
+  display: none;
+}

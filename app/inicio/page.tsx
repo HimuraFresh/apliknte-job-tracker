@@ -12,6 +12,7 @@ const BLOQUES = [
     texto:
       "Empresa y puesto se autocompletan con lo que ya has escrito antes; el resto son botones. Si tardas más de lo que tardarías en anotarlo en un papel, no lo vas a usar.",
     src: "/bloque-apuntar.webp",
+    oscuro: "/bloque-apuntar-oscuro.webp",
     alt: "El formulario de nueva candidatura, con empresa, puesto, estado y modalidad",
     ancho: 760,
     alto: 644,
@@ -22,6 +23,7 @@ const BLOQUES = [
     texto:
       "A los quince días la ficha te lo dice sola. Y si con esa empresa no hay a quién escribir, lo aplazas o lo apagas: la que no quieres seguir deja de darte la lata.",
     src: "/bloque-aviso.webp",
+    oscuro: "/bloque-aviso-oscuro.webp",
     alt: "Una candidatura con el aviso: deberías haber contactado hace un día",
     ancho: 820,
     alto: 123,
@@ -33,6 +35,7 @@ const BLOQUES = [
     texto:
       "Arrastras el CSV o pegas las celdas y te las reconoce aunque tus columnas se llamen de otra manera. No empiezas de cero ni pierdes lo que llevas apuntado.",
     src: "/bloque-importar.webp",
+    oscuro: "/bloque-importar-oscuro.webp",
     alt: "El panel de importar, con sus tres formas de traer la hoja de cálculo",
     ancho: 820,
     alto: 333,
@@ -83,7 +86,16 @@ export default function Inicio() {
             width={1120}
             height={1020}
             priority
-            className="hidden w-full sm:block"
+            className="solo-claro hidden w-full sm:block"
+          />
+          <Image
+            src="/app-escritorio-oscuro.webp"
+            alt=""
+            aria-hidden
+            width={1120}
+            height={1020}
+            priority
+            className="solo-oscuro hidden w-full sm:block"
           />
           <Image
             src="/app-movil.webp"
@@ -91,7 +103,16 @@ export default function Inicio() {
             width={540}
             height={1020}
             priority
-            className="w-full sm:hidden"
+            className="solo-claro w-full sm:hidden"
+          />
+          <Image
+            src="/app-movil-oscuro.webp"
+            alt=""
+            aria-hidden
+            width={540}
+            height={1020}
+            priority
+            className="solo-oscuro w-full sm:hidden"
           />
         </div>
       </section>
@@ -117,13 +138,17 @@ export default function Inicio() {
                 b.aire ? "bg-background p-6 sm:p-10" : "bg-surface"
               }`}
             >
-              <Image
-                src={b.src}
-                alt={b.alt}
-                width={b.ancho}
-                height={b.alto}
-                className={`w-full ${b.aire ? "rounded-xl" : ""}`}
-              />
+              {[b.src, b.oscuro].map((src, n) => (
+                <Image
+                  key={src}
+                  src={src}
+                  alt={n === 0 ? b.alt : ""}
+                  width={b.ancho}
+                  height={b.alto}
+                  aria-hidden={n === 1}
+                  className={`w-full ${n === 0 ? "solo-claro" : "solo-oscuro"} ${b.aire ? "rounded-xl" : ""}`}
+                />
+              ))}
             </figure>
           </article>
         ))}
