@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   if (!user && isPrivate) {
     return NextResponse.redirect(new URL("/entrar", request.url));
   }
-  if (user && path === "/entrar") {
+  if (user && (path === "/entrar" || path === "/" || path === "/inicio")) {
     return NextResponse.redirect(new URL("/panel", request.url));
   }
 
