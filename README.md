@@ -38,7 +38,13 @@ columns at first, an unreadable endless scroll two months later.
 - **Install it on your phone (PWA).** No store and no download: install it
   from the browser and it gets its own icon and runs full screen.
 - **Spanish and English, light and dark mode.**
-- **Accounts** with email and password, including password reset.
+- **A landing page** at the root explaining what the app does, with real
+  screenshots of it — in light and dark — so nobody has to sign up to find out.
+- **Your profile in one circle.** It shows the email you signed in with (handy
+  if you keep two accounts), lets you pick one of five hand-drawn avatars, and
+  holds your CVs, sign out and delete account.
+- **Accounts** with email and password, including password reset. New and reset
+  passwords are typed twice, so a typo can't lock you out of your own account.
 - **Help and privacy pages**, and you can delete your account — with its
   applications and CVs — yourself, from the menu.
 
@@ -114,6 +120,7 @@ automated tests: `npm test`.
 - [x] Installable mobile app (PWA)
 - [x] Accessibility pass, help page, privacy policy and account deletion
 - [x] Import from Excel, Sheets or CSV, and export to CSV
+- [x] Public landing page, profile circle with avatars, promo video
 
 Feedback, issues and pull requests are very welcome.
 
@@ -164,7 +171,14 @@ nadie entiende a los dos meses.
 - **Instálala en el móvil (PWA).** Sin tiendas y sin descargas: se instala
   desde el navegador, se queda con su icono y se abre a pantalla completa.
 - **Español e inglés, modo claro y oscuro.**
-- **Cuentas** con correo y contraseña, incluida la recuperación.
+- **Una portada** en la raíz que explica qué hace la app, con capturas reales
+  —en claro y en oscuro—, para que nadie tenga que registrarse para enterarse.
+- **Tu perfil en un círculo.** Dice con qué correo entraste (útil si llevas dos
+  cuentas), te deja elegir entre cinco avatares dibujados a mano, y guarda tus
+  CVs, cerrar sesión y borrar la cuenta.
+- **Cuentas** con correo y contraseña, incluida la recuperación. Las contraseñas
+  nuevas se escriben dos veces, para que una errata no te deje fuera de tu
+  propia cuenta.
 - **Páginas de ayuda y privacidad**, y puedes borrar tu cuenta —con sus
   candidaturas y sus CVs— tú mismo, desde el menú.
 
@@ -242,6 +256,7 @@ mm/dd, reconocimiento de columnas) están cubiertos por tests automáticos:
 - [x] App instalable en el móvil (PWA)
 - [x] Repaso de accesibilidad, ayuda, privacidad y borrado de cuenta
 - [x] Importar desde Excel, Sheets o CSV, y exportar a CSV
+- [x] Portada pública, círculo de perfil con avatares, vídeo de presentación
 
 Cualquier crítica, sugerencia, issue o pull request es bienvenida.
 
